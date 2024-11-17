@@ -5,6 +5,8 @@ from .data import datastore
 from .config import DevelopmentConfig
 from .resources import api
 from flask_cors import CORS
+from .views import view
+from werkzeug.security import generate_password_hash
 
 def create_app():
     app = Flask(__name__)
@@ -12,6 +14,7 @@ def create_app():
     db.init_app(app)
     api.init_app(app)
     app.security = Security(app, datastore)
+    app.register_blueprint(view, url_prefix='/')
     CORS(app)
 
 
@@ -25,6 +28,6 @@ def init_db(datastore):
     # datastore.create_role(name='user', description='User')
     db.session.commit()
     if not datastore.find_user(email = 'admin@email.com'):
-        datastore.create_user(email = "admin@email.com", password = "123456" , roles=["admin"])
+        datastore.create_user(email = "admin@email.com", password =generate_password_hash("123456") , roles=["admin"])
 
     db.session.commit()

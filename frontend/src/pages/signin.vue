@@ -1,7 +1,9 @@
 <script setup>
 import {ref} from 'vue'
+import {useRouter} from 'vue-router'
 const email = ref('')
 const password = ref('')
+const router = useRouter()
 const submitForm = async () => {
     try{
         const response = await fetch('http://127.0.0.1:5000/user-login',{
@@ -16,7 +18,13 @@ const submitForm = async () => {
         })
         const data = await response.json()
         localStorage.setItem('auth-token', data.token)
+        if(data.role === "admin"){
+            router.push({path:'/dummy'})
+        }
     }
+
+    //  Vendor & User goes here
+
 catch(error){
     console.log(error)
 }
