@@ -1,0 +1,88 @@
+/* Global styling */
+
+
+
+/* Navigation bar styling */
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.navbar-brand:hover {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.nav-link {
+    color: #333;
+    font-size: 1rem;
+    margin-right: 1rem;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.navbar-toggler {
+    border-color: #ccc;
+}
+
+.navbar-toggler-icon {
+    background-color: #007bff;
+}
+
+/* Dropdown styling */
+.nav-item.dropdown .dropdown-menu {
+    min-width: 150px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-menu .dropdown-item {
+    padding: 10px 15px;
+    color: #333;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-menu .dropdown-item:hover {
+    background-color: #f0f0f0;
+    color: #007bff;
+}
+
+/* User avatar styling */
+.nav-item img.rounded-circle {
+    border: 2px solid #007bff;
+    padding: 2px;
+    transition: transform 0.2s ease, border-color 0.3s ease;
+}
+
+.nav-item img.rounded-circle:hover {
+    transform: scale(1.1);
+    border-color: #0056b3;
+}
+   
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .nav-link {
+        font-size: 0.9rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    .dropdown-menu {
+        min-width: 120px;
+    }
+}
