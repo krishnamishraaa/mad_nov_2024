@@ -1,13 +1,13 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
 import Chart from 'chart.js/auto';
-import approval from '/src/components/approval.vue'
-import statistics from '/src/components/statistics.vue'
-import flagged from '/src/components/flagged.vue'
-import adrequests from '/src/components/ad-requests.vue'
-import tabsLayout from '/src/components/tabsLayout.vue'
-import datacards from '/src/components/data_cards.vue'
-import datacircles from '/src/components/data_circles.vue'
+import approval from '/src/components/admin/approval.vue'
+import statistics from '/src/components/common/statistics.vue'
+import flagged from '/src/components/admin/flagged.vue'
+import adrequests from '/src/components/ad_request/ad-requests.vue'
+import tabsLayout from '/src/components/common/tabsLayout.vue'
+import datacards from '/src/components/common/data_cards.vue'
+import datacircles from '/src/components//common/data_circles.vue'
 
 
 const defaultTab = 'approval';
@@ -40,9 +40,9 @@ const tabs = [
             </div>
 
             <div class="bottomCssStats">
-                <!-- Make Circular Charts showing Currenyt Statistics -->
+              
                 <datacards />
-                <datacircles />
+                
                 Current Categories:
                 Categories with most Influencers:
                 Categories with most Campaigns:

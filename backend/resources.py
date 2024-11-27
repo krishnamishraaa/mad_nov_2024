@@ -4,7 +4,6 @@ from flask import g, request, jsonify, json, current_app as app
 from sqlalchemy import desc
 from datetime import datetime
 from .data import datastore
-from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash
 
 api = Api(prefix="/api")
@@ -42,17 +41,23 @@ class CampaignApi(Resource):
 	@marshal_with(output_fields_campaign)
 	def get(self):
 		token, user_id, user_role = check_token_and_user()
-		# Retrieve the campaign by its ID
-		if user_role == "admin":
-			campaign = Campaign.query.all()
-		elif user_role == "sponsor":
-			campaign = Campaign.query.filter_by(sponsor_id=user_id).all()
+		id = request.args.get("id")
+		
+		if id != "null" and id is not None:
+			campaign = Campaign.query.get(id)
+			if campaign:
+				return campaign, 200
+			return {"message": "Campaign not found"}, 414
 		else:
-			campaign = Campaign.query.filter_by(visibility=True).all()
-
-		if campaign:
-			return campaign, 200
-		return {"message": "No Relevant Campaign Found"}, 404
+			if user_role == "admin":
+				campaign = Campaign.query.all()
+			elif user_role == "sponsor":
+				campaign = Campaign.query.filter_by(sponsor_id=user_id).all()
+			else:
+				campaign = Campaign.query.filter_by().all()
+			if campaign:
+				return campaign, 200
+			return {"message": "No Relevant Campaign Found"}, 404
 
 	def post(self):
 
@@ -94,6 +99,7 @@ class CampaignApi(Resource):
 		parser.add_argument(
 			"status", type=str, default="Active", help="Status is required"
 		)
+		parser.add_argument("requirements", type=str, required=False, help="Requirements are optional")
 		args = parser.parse_args()
 
 		new_campaign = Campaign(
@@ -107,6 +113,7 @@ class CampaignApi(Resource):
 			status=args["status"],
 			goals=args["goals"],
 			category=args["category"],
+			requirements=args["requirements"],
 			niche=args["niche"],
 		)
 		try:
@@ -140,6 +147,7 @@ class CampaignApi(Resource):
 		parser.add_argument("goals", type=str, required=False, help="Campaign goals (optional)")
 		parser.add_argument("category", type=str, required=True, help="Category is required")
 		parser.add_argument("niche", type=str, required=True, help="Niche is required")
+		parser.add_argument("requirements", type=str, required=False, help="Requirements are optional")
 		parser.add_argument("status", type=str, default="Active", help="Status is required")
 		args = parser.parse_args()
 
@@ -164,6 +172,8 @@ class CampaignApi(Resource):
 			campaign.niche = args["niche"]
 		if args["status"]:
 			campaign.status = args["status"]
+		if args["requirements"]:
+			campaign.requirements = args["requirements"]
 		try:
 			db.session.commit()
 		except Exception as e:
@@ -328,7 +338,7 @@ class SponsorApi(Resource):
 
 				return sponsors_dict, 200
 
-			return {"message": "No unapproved sponsors found"}, 404
+			return {"message": "No unapproved sponsors found"}, 200
 
 		elif action == "count":
 			# Count total number of sponsors
@@ -459,47 +469,111 @@ output_fields_ad_request = {
 ######## Will do Further from here #####################
 class AdRequestApi(Resource):
 
-	@marshal_with(output_fields_ad_request)
-	def get(self):
-		# Retrieve ad request by its ID
-		ad_request = AdRequest.query.group_by(AdRequest.campaign_id).all()
-		if ad_request:
-			return ad_request, 200
-		return {"message": "Ad Request not found"}, 404
+    @marshal_with(output_fields_ad_request)
+    def get(self):
+        token, user_id, user_role = check_token_and_user()
 
-	def post(self, camp_id, inf_id):
-		token, user_id, user_role = check_token_and_user()
+        if user_role == "admin":
+            ad_request = AdRequest.query.all()
+            print(ad_request, "ye wala ad request")
+            return ad_request, 200
+		
+        elif user_role == "sponsor":
+            ad_request = AdRequest.query.all()
+            print(ad_request, "ye sponsor wala ad request")
+            return ad_request, 200
+        elif user_role == "influencer":
+            # retrieving influencer details for the given ID
+            infl = Influencer.query.filter_by(user_id=user_id).first()
+            if not infl:
+                return {"message": "Influencer not found"}, 404
+            ad_request = AdRequest.query.filter_by(
+                influencer_id=infl.influencer_id
+            ).all()
+            return ad_request, 200
+        print("Yaha  aa rha hai")
+        return {"message": "Ad Request not found"}, 404
 
-		# Parse JSON request body
-		args = request.get_json()
-		print(args)
+    def post(self, camp_id, inf_id):
+        token, user_id, user_role = check_token_and_user()
 
-		if (
-			not args
-			or "message" not in args
-			or "requirements" not in args
-			or "payment" not in args
-		):
-			return {"error": "Missing required fields"}, 400
+        # Parse JSON request body
+        args = request.get_json()
+        print(args)
 
-		# Create a new ad request
-		new_ad_request = AdRequest(
+        if (
+            not args
+            or "message" not in args
+            or "requirements" not in args
+            or "payment" not in args
+        ):
+            return {"error": "Missing required fields"}, 400
+
+        # Create a new ad request
+        new_ad_request = AdRequest(
 			campaign_id=camp_id,
 			influencer_id=inf_id,
 			messages=args["message"],
-			requirements=json.dumps(args["requirements"]),
+			# requirements=json.dumps(args["requirements"]),
 			payment_amount=args["payment"],
 			status=args["status"],
 		)
-		try:
-			db.session.add(new_ad_request)
-			db.session.commit()
-		except Exception as e:
-			db.session.rollback()
-			return {"message": f"Error creating ad request: {str(e)}"}, 500
+        try:
+            db.session.add(new_ad_request)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {"message": f"Error creating ad request: {str(e)}"}, 500
 
-		return {"message": "Ad Request created successfully"}, 201
+        return {"message": "Ad Request created successfully"}, 201
 
+    def put(self,id):
+        token, user_id, user_role = check_token_and_user()
+
+        ad_request = AdRequest.query.get(id)
+
+        if not ad_request:
+            return {"message": "Ad Request not found"}, 404
+
+        args=request.get_json()
+        if not args:
+            return {"message": "Missing required fields"}, 400
+
+        if args['param'] =="accept":
+            ad_request.status = "Accepted"
+        elif args['param'] =="reject":
+            ad_request.status = "Rejected"
+        elif args['param'] =="negotiate":
+            ad_request.payment_amount = args["amount"]
+        elif args['param'] =="message":
+            ad_request.messages = args["message"]
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {"message": f"Error updating ad request: {str(e)}"}, 500
+
+        return {"message": "Ad Request updated successfully"}, 200
+
+    def delete(self, id):
+        token, user_id, user_role = check_token_and_user()
+        print(user_role)
+        if user_role !="sponsor":
+            return {"message": "Unauthorized access"}, 403
+
+        ad_request = AdRequest.query.get(id)
+        print(ad_request)
+        if not ad_request:
+            return {"message": "Ad Request not found"}, 404
+
+        try:
+            db.session.delete(ad_request)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return {"message": f"Error deleting ad request: {str(e)}"}, 500
+
+        return {"message": "Ad Request deleted successfully"}, 200
 
 parser_user = reqparse.RequestParser()
 parser_user.add_argument("email", type=str, required=True, help="Email is required")
@@ -545,27 +619,71 @@ class UserApi(Resource):
 			return {"message": "User creation failed"}, 400
 
 
-class adminApi(Resource):
+class stats(Resource):
 	def get(self):
+		token, user_id, user_role = check_token_and_user()
 		# Give counts related to the users influencer and sponsors
 		users = User.query.count()
 		influencers = Influencer.query.count()
 		sponsors = Sponsor.query.count()
 		campaign = Campaign.query.count()
-
+		adRequest= AdRequest.query.count()
 		totalBudget = Sponsor.query.with_entities(Sponsor.budget).all()
 		totalBudget = sum([budget[0] for budget in totalBudget])
-		return {
+		pendingAdRequests = AdRequest.query.filter_by(status="Pending").count()
+		totalReach=Influencer.query.with_entities(Influencer.reach).all()
+		if user_role == "admin":
+			return {
 			"users": users,
 			"influencers": influencers,
 			"sponsors": sponsors,
 			"totalBudget": totalBudget,
+			"campaigns": campaign,
+			"adRequests": adRequest,
+			"pendingAdRequests": pendingAdRequests,
+			"totalReach": sum([reach[0] for reach in totalReach]),
 		}, 200
+		elif user_role == "sponsor":
+			campaigns = Campaign.query.filter_by(sponsor_id=user_id).count()
+			adRequests_total = AdRequest.query.filter_by(sponsor_id=user_id).count()
+			adRequests_pending = AdRequest.query.filter_by(sponsor_id=user_id, status="Pending").count()
+			adRequests_accepted = AdRequest.query.filter_by(sponsor_id=user_id, status="Accepted").count()
+			adRequests_rejected = AdRequest.query.filter_by(sponsor_id=user_id, status="Rejected").count()
+			total_sponsor_Budget = Sponsor.query.with_entities(Sponsor.budget).filter_by(user_id=user_id).all()
+			spentBudget = AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(sponsor_id=user_id).all()
+			remainingBudget = sum([budget[0] for budget in total_sponsor_Budget]) - sum([spent[0] for spent in spentBudget])
+			return{
+				"campaigns": campaigns,
+				"adRequests_total": adRequests_total,
+				"adRequests_pending": adRequests_pending,
+				"adRequests_accepted": adRequests_accepted,
+				"adRequests_rejected": adRequests_rejected,
+				"totalBudget": totalBudget,
+				"remainingBudget": remainingBudget,
+			}
+		elif user_role == "influencer":
+			adRequests_total = AdRequest.query.filter_by(influencer_id=user_id).count()
+			adRequests_pending = AdRequest.query.filter_by(influencer_id=user_id, status="Pending").count()
+			adRequests_accepted = AdRequest.query.filter_by(influencer_id=user_id, status="Accepted").count()
+			adRequests_rejected = AdRequest.query.filter_by(influencer_id=user_id, status="Rejected").count()
+			earnings=AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(influencer_id=user_id).all()
+			totalEarnings = sum([earn[0] for earn in earnings])
+			EarningThisMonth = AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(influencer_id=user_id).filter(AdRequest.created_at >= datetime.now().replace(day=1)).all()
+			return{
+				"adRequests_total": adRequests_total,
+				"adRequests_pending": adRequests_pending,
+				"adRequests_accepted": adRequests_accepted,
+				"adRequests_rejected": adRequests_rejected,
+				"totalEarnings": totalEarnings,
+				"EarningThisMonth": sum([earn[0] for earn in EarningThisMonth]),
+			}
+		else:
+			return {"message": "Unauthorized access"}, 403
 
 
 api.add_resource(CampaignApi,"/campaign","/campaign/<int:id>",methods=["GET", "PUT", "POST", "DELETE"],)
 api.add_resource(InfluencerApi,"/influencer","/influencer/<int:id>",methods=["GET", "POST", "PUT", "DELETE"],)
 api.add_resource(SponsorApi,"/sponsors","/sponsors/<int:id>",methods=["GET", "POST", "PUT", "DELETE"],)
-api.add_resource(AdRequestApi,"/ad_request", "/ad_request/<int:camp_id>/<int:inf_id>",	methods=["GET", "POST", "PUT", "DELETE"],)
+api.add_resource(AdRequestApi,"/ad_request","/ad_request/<int:id>", "/ad_request/<int:camp_id>/<int:inf_id>",methods=["GET", "POST", "PUT", "DELETE"],)
 api.add_resource(UserApi,"/emailcheck","/user","/user/<string:email>" "/user/<int:id>",methods=["GET", "POST", "PUT", "DELETE"],)
-api.add_resource(adminApi, "/adminstats", methods=["GET"])
+api.add_resource(stats, "/stats", methods=["GET"])

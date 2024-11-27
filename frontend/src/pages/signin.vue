@@ -2,11 +2,11 @@
 import { ref } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
 
-import aboutus from '../components/AboutUs.vue'
-import services from '../components/Services.vue'
-import contactus from '../components/ContactUs.vue'
-import ourwork from '../components/OurWork.vue'
-import brands_stars from '../components/brands_stars.vue'
+import aboutus from '../components/public_pages/AboutUs.vue'
+import services from '../components/public_pages/Services.vue'
+import contactus from '../components/public_pages/ContactUs.vue'
+import ourwork from '../components/public_pages/OurWork.vue'
+import brands_stars from '../components/public_pages/brands_stars.vue'
 
 
 const email = ref('')

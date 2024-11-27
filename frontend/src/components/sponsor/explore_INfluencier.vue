@@ -1,5 +1,5 @@
 <script setup>
-import influencer_Tables from '/src/components/influencer_Table.vue'
+import influencer_Tables from '/src/components/sponsor/influencer_Table.vue'
 import { ref, onMounted } from 'vue'
 
 const influencers = ref([]);

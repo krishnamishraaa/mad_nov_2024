@@ -82,32 +82,35 @@ onMounted(async () => {
     <div>
         <!-- Table of unapproved sponsors -->
         <h3>Pending Sponsors</h3>
-        <div v-if="sponsors.length === 0">No pending sponsors at the moment.</div>
-        <table v-else>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Industry</th>
-                    <th>Budget</th>
-                    <th>Website</th>
-                    <th>Notes</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="sponsor in sponsors" :key="sponsor.sponsor_id">
-                    <td>{{ sponsor.name }}</td>
-                    <td>{{ sponsor.industry }}</td>
-                    <td>{{ sponsor.budget }}</td>
-                    <td><a :href="sponsor.company_website" target="_blank">{{ sponsor.company_website }}</a></td>
-                    <td>{{ sponsor.notes }}</td>
-                    <td>
-                        <button @click="approveSponsor(sponsor.sponsor_id)" class="btn btn-success">Approve</button>
-                        <button @click="rejectSponsor(sponsor.sponsor_id)" class="btn btn-danger">Reject</button>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+        <div v-if="sponsors.length === 0">No pending sponsors at the moment.
+        </div>
+        <div v-else>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Industry</th>
+                        <th>Budget</th>
+                        <th>Website</th>
+                        <th>Notes</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="sponsor in sponsors" :key="sponsors.sponsor_id">
+                        <td>{{ sponsor.name }}</td>
+                        <td>{{ sponsor.industry }}</td>
+                        <td>{{ sponsor.budget }}</td>
+                        <td><a :href="sponsor.company_website" target="_blank">{{ sponsor.company_website }}</a></td>
+                        <td>{{ sponsor.notes }}</td>
+                        <td>
+                            <button @click="approveSponsor(sponsor.sponsor_id)" class="btn btn-success">Approve</button>
+                            <button @click="rejectSponsor(sponsor.sponsor_id)" class="btn btn-danger">Reject</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </template>
 

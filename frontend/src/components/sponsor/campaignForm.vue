@@ -9,8 +9,15 @@ const category = ref('')
 const niche = ref('')
 const visibility = ref('')
 const goals= ref('')
+const requirements =ref({
+  photo: false,
+  video: false,
+  shorts: false,
+  post: false
+})
 const authToken = localStorage.getItem('auth-token');
 const userDetails = JSON.parse(localStorage.getItem('userDetails'));
+
 const submit_campaign= async() => {
   try{
     const response = await fetch('http://127.0.0.1:5000/api/campaign', {
@@ -31,9 +38,15 @@ const submit_campaign= async() => {
           "niche": niche.value,
           "visibility": visibility.value,
           "goals": goals.value,
-          "status": "Active"
+          "status": "Active",
+          "requirements": JSON.stringify({
+            photo: requirements.photo,
+            video: requirements.video,
+            shorts: requirements.shorts,
+            post: requirements.post
+          }),
+
       }),
-    // credentials:'include'
     }
     )
       if (!response.ok)
@@ -42,11 +55,13 @@ const submit_campaign= async() => {
         throw new Error(message)
 
       }
-      return await response.json()
+      alert('Campaign Created Successfully')
+
     }
   catch (error) {
     console.error('Error:', error);
   }
+
 }
 
 </script>
@@ -81,6 +96,7 @@ const submit_campaign= async() => {
         <input type="number" id="budget" v-model="budget" class="form-control" placeholder="Budget">
       </div>
 
+
       <!-- Visibility Field -->
       <div class="col">
         <label>Visibility</label>
@@ -92,21 +108,33 @@ const submit_campaign= async() => {
           <label for="visibility-false">False</label>
         </div>
       </div>
-      <!-- </div> -->
+    </div>
+    <div class="col">
+      <!-- Check boxes with details of requirements -->
+      <label>Requirements</label>
 
-
-      <div class="row">
-        <div class="col">
-          <input type="text" v-model="category" class="form-control" placeholder="Category" aria-label="Category">
-        </div>
-        <div class="col">
-          <input type="text" v-model="niche" class="form-control" placeholder="Niche" aria-label="Niche">
-        </div>
+    
+        <input class="checkbox" type="checkbox" id="photo" value="photo">
+        <label for="photo">Photo</label>
+        <input class="checkbox" type="checkbox" id="video" value="video">
+        <label for="video">Video</label>
+        <input class="checkbox" type="checkbox" id="shorts" value="shorts">
+        <label for="shorts">Shorts</label>
+        <input class="checkbox" type="checkbox" id="post" value="post">
+        <label for="post">Post</label>
+    </div>
+    <br>
+    <div class="row">
+      <div class="col">
+        <input type="text" v-model="category" class="form-control" placeholder="Category" aria-label="Category">
       </div>
-      <div class="row">
-        <div class="col">
-          <input type="text" v-model="goals" class="form-control" placeholder="Goals" aria-label="Goal">
-        </div>
+      <div class="col">
+        <input type="text" v-model="niche" class="form-control" placeholder="Niche" aria-label="Niche">
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
+        <input type="text" v-model="goals" class="form-control" placeholder="Goals" aria-label="Goal">
       </div>
     </div>
     <button type="submit" class="btn btn-success">Create Campaign</button>
@@ -184,5 +212,12 @@ h2 {
   margin-bottom: 20px;
   color: #333;
   font-weight: bold;
+}
+.checkbox{
+  display: inline;
+  size:big;
+  margin-left: 20px;
+  margin-right:10px;
+  transform: scale(1.5);
 }
 </style>

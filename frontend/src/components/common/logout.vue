@@ -1,8 +1,5 @@
 <script setup>
 import { ref } from 'vue';
-import { useRouter} from 'vue-router';
-
-const router = useRouter();
 
 const userDetails = ref(null);
 
@@ -37,10 +34,10 @@ const getAvatarUrl = (id) => {
 <template>
     <div v-if="userDetails" class="top-left-container">
 
-        <a class="navbar-brand" :href="'/' + (userDetails.role || '/signin')">{{ userDetails.name.split(' ')[0] }}'s
-            Home</a>
-
+        <a :href="'/' + (userDetails.role || '/signin')">{{ userDetails.name.split(' ')[0] }}'s
+        Home</a>
     </div>
+
     <div v-if="userDetails" class="top-right-container">
         <img :src="getAvatarUrl(userDetails.id) || 'src/assets/avatar.png'"  class="avatar">
         <a href="#" @click="logout()" class="logout-link">Logout</a>
@@ -49,7 +46,7 @@ const getAvatarUrl = (id) => {
 </template>
 
 
-<style scoped>
+<style>
 
 /* Position the container at the top-right corner */
 .top-right-container {

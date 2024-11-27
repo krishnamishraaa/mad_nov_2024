@@ -55,7 +55,6 @@ class Sponsor(db.Model):
             'notes': self.notes,
             'approved': self.approved
         }
-    
 
 
 class Influencer(db.Model):
@@ -76,20 +75,20 @@ class Influencer(db.Model):
 
 class Campaign(db.Model):
     __tablename__ = 'campaign'
-    
+
     campaign_id = db.Column(db.Integer, primary_key=True)
     sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.sponsor_id'), nullable=True)
     name = db.Column(db.String(100), nullable=False)  # Name of the campaign
     description = db.Column(db.String(200))  # Campaign details
+    requirements = db.Column(db.String(200))  # Influencer requirements
     start_date = db.Column(db.String(100))  # Start date of the campaign
     end_date = db.Column(db.String(100))  # End date of the campaign
     budget = db.Column(db.Float)  # Budget for the campaign
-    visibility = db.Column(db.String(10), nullable=False)  # public or private
+    visibility = db.Column(db.Boolean(10), default= True, nullable=False)  # public or private
     goals = db.Column(db.String(200))  # Campaign goals
     category= db.Column(db.String(100))  # Category of the campaign
     niche = db.Column(db.String(100))  # Niche of the campaign
     status = db.Column(db.String(10), nullable=False)  # Status: Active, Completed, Cancelled
-
 
     ad_requests = db.relationship('AdRequest', backref='campaign', lazy=True)  # Campaign can have many Ad Requests
 
@@ -99,7 +98,7 @@ class AdRequest(db.Model):
     ad_request_id = db.Column(db.Integer, primary_key=True)
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.campaign_id'), nullable=False)
     influencer_id = db.Column(db.Integer, db.ForeignKey('influencer.influencer_id'), nullable=False)
-    messages = db.Column(db.String(200))  # Conversation or negotiation between sponsor and influencer
-    requirements = db.Column(db.String(200))  # Requirements for the ad (e.g., "show Samsung s23 in 3 videos")
-    payment_amount = db.Column(db.Float)  # Agreed payment amount
-    status = db.Column(db.String(10), nullable=False)  # Status: Pending, Accepted, Rejected
+    messages = db.Column(db.String(200)) 
+    payment_amount = db.Column(db.Float) 
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    status = db.Column(db.String(10), nullable=False, default='Pending')

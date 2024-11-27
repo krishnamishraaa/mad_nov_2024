@@ -2,12 +2,12 @@
 import { ref } from 'vue';
 
 // State for each stat
-const influencerCount = ref(6);
-const sponsorCount = ref(10);
-const campaignCount = ref(4);
-const revenueAmount = ref(100000);
+const influencerCount = ref('');
+const sponsorCount = ref('');
+const campaignCount = ref('');
+const revenueAmount = ref('');
 
-// Function to simulate updating values (can be replaced with API calls)
+
 const updateStat = (type, value) => {
     if (type === 'influencers') {
         influencerCount.value = value;

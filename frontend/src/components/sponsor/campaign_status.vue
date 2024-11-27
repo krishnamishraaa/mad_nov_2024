@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
-import ProgressCard from '/src/components/progress.vue';
+import ProgressCard from '/src/components/common/progress.vue';
 
 // Reactive variable to hold the projects
 const projects = ref([]);
@@ -59,6 +59,8 @@ onMounted(() => {
         <ProgressCard v-for="(project, index) in projects" :key="index" :title="project.name"
             :progress="progressValues[index]" :description="project.description" />
     </div>
+
+    
 </template>
 
 <style>

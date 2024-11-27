@@ -38,11 +38,6 @@ const filteredData = computed(() =>
 
 const ad_Request = async (influencer_id, campaign_id) => {
     const message = prompt('Enter a message for the influencer');
-
-    const post = confirm('Do you want a post?');
-    const story = confirm('Do you want a story?');
-    const video = confirm('Do you want a video?');
-    const image = confirm('Do you want an image?');
     const payment = prompt('Enter the payment amount');
 
     try {
@@ -98,6 +93,7 @@ const ad_Request = async (influencer_id, campaign_id) => {
                     <th>Niche</th>
                     <th>Reach <small>(Minimum:{{ reach_search }})</small></th>
                     <th>Add to Campaign</th>
+                    <th>Flag</th>
                 </tr>
             </thead>
             <tbody>
@@ -121,6 +117,9 @@ const ad_Request = async (influencer_id, campaign_id) => {
                             @click="ad_Request(item.influencer_id, selectedCampaign[item.influencer_id])">
                             Add
                         </button>
+                    </td>
+                    <td>
+                        <button @click="flagInfluencer(item.influencer_id)">Flag</button>
                     </td>
                 </tr>
             </tbody>

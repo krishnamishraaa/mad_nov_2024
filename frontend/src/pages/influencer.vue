@@ -1,27 +1,27 @@
-<script>
+<script setup>
+import { ref, reactive, onMounted, computed } from 'vue';
+import tabLayout from '/src/components/common/tabsLayout.vue'
+import adrequests from '/src/components/ad_request/ad-requests.vue'
+import currentengagement from '/src/components/common/statistics.vue'
+import profileedit from '/src/pages/register.vue'
+import publiccampaignsearch from '/src/components/influencer/view_campaign.vue'
+
+const defaultTab = 'adrequests';
+const tabs = [
+    { key: 'adrequests', label: 'Ad Requests', component: adrequests },
+    { key: 'currentengagement', label: 'Current Engagement & Earnings', component: currentengagement },
+    { key: 'profileedit', label: 'Profile Edit', component: profileedit },
+    { key: 'publiccampaignsearch', label: 'Public Campaign Search', component: publiccampaignsearch },
+];
 </script>
 
 <template>
-    <div class="container">
+    <h1> Welcome to the Influencer Dashboard</h1>
+    <tabLayout :tabs="tabs" :defaultTab="defaultTab">
+        <template v-slot:top-right-content>
 
-        <div class="sections">
-            Ad Requests, Check details of the AD requests and accept or reject them 
-            and ble to negotaite Payment amount.
-        </div>
-
-        <div class="sections">
-
-            Current Engagement & Earnings
-        </div>
-
-        <div class="sections">
-            Profile Edit
-
-        </div>
-        <div class="sections">
-            Public Campaign Search
-        </div>
-    </div>
+        </template>
+    </tabLayout>
 </template>
 
 <style scoped>
@@ -45,6 +45,15 @@
     margin: 0;
     padding: 20px;
     box-sizing: border-box;
+}
+h1{
+    text-align: center;
+    color: #f15b5b;
+    font-size: 2em;
+    font-weight: bold;
+    margin: 0;
+    padding: 20px;
+    background-color: #e8eed5;
 }
 
 </style>

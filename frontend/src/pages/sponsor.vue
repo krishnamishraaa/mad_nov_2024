@@ -2,13 +2,13 @@
 
 import { ref, onMounted, nextTick } from 'vue';
 import Chart from 'chart.js/auto';
-import tabsLayout from '/src/components/tabsLayout.vue'
-import datacards from '/src/components/data_cards.vue'
-import datacircles from '/src/components/data_circles.vue'
-import campaignForm from '/src/components/campaignForm.vue'
-import influencers from '/src/components/explore_INfluencier.vue'
-import status from '/src/components/campaign_status.vue'
-import adrequest from '/src/components/ad-requests.vue'
+import tabsLayout from '/src/components/common/tabsLayout.vue'
+import datacards from '/src/components/common/data_cards.vue'
+import datacircles from '/src/components/common/data_circles.vue'
+import campaignForm from '/src/components/sponsor/campaignForm.vue'
+import influencers from '/src/components/sponsor/explore_INfluencier.vue'
+import status from '/src/components/sponsor/campaign_status.vue'
+import adrequest from '/src/components/ad_request/ad-requests.vue'
 
 
 const defaultTab = 'create';
@@ -27,7 +27,8 @@ const tabs = [
     <h3>SPONSOR DASHBOARD</h3>
     <tabsLayout :tabs="tabs" :defaultTab="defaultTab">
         <template v-slot:top-right-content>
-            Trending Influncers goes here
+            Top Content Here
+            
         </template>
 
     </tabsLayout>

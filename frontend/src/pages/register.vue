@@ -1,6 +1,6 @@
 <script setup>
-import InfluencerForm from '../components/reg_form_influencer.vue';
-import SponsorForm from '../components/reg_form_sponsor.vue';
+import InfluencerForm from '../components/influencer/reg_form_influencer.vue';
+import SponsorForm from '../components/sponsor/reg_form_sponsor.vue';
 import { ref, computed } from 'vue';
 
 const email_valid = ref(false);

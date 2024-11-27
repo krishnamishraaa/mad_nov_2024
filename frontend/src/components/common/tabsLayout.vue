@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { defineProps, defineEmits } from 'vue';
-
+import logout from '/src/components/common/logout.vue';
 
 const emit = defineEmits(['tab-change']);
 
@@ -31,6 +30,7 @@ const changeTab = (tab) => {
 </script>
 
 <template>
+    <logout />
     <div class="tabs-layout">
         <!-- Top Section -->
         <div class="top-section">

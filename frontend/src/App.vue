@@ -1,8 +1,6 @@
 <script setup> 
 import { useRouter } from 'vue-router'
-
-import NavigationBar from './components/navigationBar.vue';
-import Logout from './components/logout.vue';
+import Logout from './components/common/logout.vue';
 
 
 const router = useRouter()
@@ -21,8 +19,7 @@ router.beforeEach((to, from, next) => {
 </script>
 
 <template>
-  <Logout />
-    <router-view />
+<router-view />
 </template>
 
 <style>
