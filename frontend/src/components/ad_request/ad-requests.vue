@@ -124,7 +124,7 @@ onMounted(() => {
 
                     </tr>
                 </thead>
-                <tbody>
+                <!-- <tbody>
                     <tr v-for="ad in ads" :key="ad.ad_request_id">
                         <td>{{ ad.campaign_id }}</td>
                         <td>{{ ad.influencer_id }}</td>
@@ -139,6 +139,7 @@ onMounted(() => {
                                     <button @click="negotiation(ad.ad_request_id, 'reject')">Reject</button>
 
                                 </td>
+                            
                                 <td>
                                     <button @click="negotiation(ad.ad_request_id, 'message')"> Negotiate </button>
                                 </td>
@@ -154,9 +155,33 @@ onMounted(() => {
         </div>
     </div>
         </tr>
-        </tbody>
-        </table>
-    </div>
+        </tbody> -->
+                <tbody>
+                    <tr v-for="ad in ads" :key="ad.ad_request_id">
+                        <td>{{ ad.campaign_id }}</td>
+                        <td>{{ ad.influencer_id }}</td>
+                        <td>{{ ad.messages }}</td>
+                        <td>{{ ad.payment_amount }}</td>
+                        <td>{{ ad.status }}</td>
+
+                        <!-- Conditional rendering for user roles -->
+                        <td v-if="userDetails.role !== 'admin'">
+                            <template v-if="userDetails.role === 'influencer'">
+                                <template v-if="ad.status === 'Pending'">
+                                    <button @click="negotiation(ad.ad_request_id, 'accept')">Accept</button>
+                                    <button @click="negotiation(ad.ad_request_id, 'reject')">Reject</button>
+                                </template>
+                                <template v-else>
+                                    <button @click="revoke(ad.ad_request_id)" class="btn btn-warning">Revoke</button>
+                                    <button @click="negotiation(ad.ad_request_id, 'negotiate')"
+                                        class="btn btn-primary">Negotiate</button>
+                                </template>
+                            </template>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </template>
 

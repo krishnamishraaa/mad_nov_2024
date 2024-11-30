@@ -2,32 +2,35 @@
 import { ref, onMounted, computed } from "vue";
 import ProgressCard from '/src/components/common/progress.vue';
 
-// Reactive variable to hold the projects
+// Reactive variables
 const projects = ref([]);
 const authToken = localStorage.getItem('auth-token');
 const userDetails = JSON.parse(localStorage.getItem('userDetails'));
+const user_id = ref(userDetails?.id || ''); // Default to user's ID or fallback to an empty string
 
-// Simulate an API call
+// Fetch projects from API
 const fetchProjects = async () => {
     try {
-        // Replace with your API endpoint
-        const response = await fetch("http://127.0.0.1:5000/api/campaign",{
+        const response = await fetch("http://127.0.0.1:5000/api/campaign", {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`,
                 'userDetails': JSON.stringify(userDetails),
-        } });
-    
+            },
+        });
+
         if (!response.ok) throw new Error("Failed to fetch projects");
+
         const data = await response.json();
-        projects.value = data; // Assuming data is an array of project objects
+        projects.value = data || []; // Ensure projects is always an array
         console.log("Fetched projects:", projects.value);
     } catch (error) {
         console.error("Error fetching projects:", error);
     }
 };
 
+// Compute progress values for each project
 const progressValues = computed(() => {
     return projects.value.map((project) => {
         const now = Date.now();
@@ -47,20 +50,22 @@ const progressValues = computed(() => {
     });
 });
 
-
-// Fetch data when the component mounts
+// Fetch data on mount
 onMounted(() => {
-    fetchProjects();
+    if (user_id.value) {
+        fetchProjects(user_id.value);
+    } else {
+        console.error("Error: User ID is not defined.");
+    }
 });
 </script>
 
 <template>
     <div class="card-container">
+        <!-- Loop through projects and render ProgressCard -->
         <ProgressCard v-for="(project, index) in projects" :key="index" :title="project.name"
             :progress="progressValues[index]" :description="project.description" />
     </div>
-
-    
 </template>
 
 <style>

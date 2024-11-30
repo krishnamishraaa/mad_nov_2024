@@ -67,10 +67,19 @@ class Influencer(db.Model):
     reach = db.Column(db.Integer)
     social_links = db.Column(db.JSON)
     website = db.Column(db.String(255))
-
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Reference to the User table
-
     ad_requests = db.relationship('AdRequest', backref='influencer', lazy=True)
+
+    def to_dict(self):
+        return {
+            'influencer_id': self.influencer_id,
+            'name': self.name,
+            'category': self.category,
+            'niche': self.niche,
+            'reach': self.reach,
+            'social_links': self.social_links,
+            'website': self.website
+        }
 
 
 class Campaign(db.Model):
@@ -91,6 +100,22 @@ class Campaign(db.Model):
     status = db.Column(db.String(10), nullable=False)  # Status: Active, Completed, Cancelled
 
     ad_requests = db.relationship('AdRequest', backref='campaign', lazy=True)  # Campaign can have many Ad Requests
+    
+    def to_dict(self):
+        return {
+            'campaign_id': self.campaign_id,
+            'name': self.name,
+            'description': self.description,
+            'requirements': self.requirements,
+            'start_date': self.start_date,
+            'end_date': self.end_date,
+            'budget': self.budget,
+            'visibility': self.visibility,
+            'goals': self.goals,
+            'category': self.category,
+            'niche': self.niche,
+            'status': self.status
+        }
 
 class AdRequest(db.Model):
     __tablename__ = 'ad_request'
@@ -99,6 +124,27 @@ class AdRequest(db.Model):
     campaign_id = db.Column(db.Integer, db.ForeignKey('campaign.campaign_id'), nullable=False)
     influencer_id = db.Column(db.Integer, db.ForeignKey('influencer.influencer_id'), nullable=False)
     messages = db.Column(db.String(200)) 
-    payment_amount = db.Column(db.Float) 
+    payment_amount = db.Column(db.Float)
     created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     status = db.Column(db.String(10), nullable=False, default='Pending')
+
+class Flag(db.Model):
+    __tablename__ = 'flag'
+
+    flag_id = db.Column(db.Integer, primary_key=True)
+    influencer_id = db.Column(db.Integer, db.ForeignKey('influencer.influencer_id'), nullable=False)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.sponsor_id'), nullable=False)
+    reason = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
+    status = db.Column(db.String(10), nullable=False, default='Pending')
+    
+    def to_dict(self):
+        return {
+            'flag_id': self.flag_id,
+            'influencer_id': self.influencer_id,
+            'sponsor_id': self.sponsor_id,
+            'reason': self.reason,
+            'created_at': self.created_at,
+            'status': self.status
+        }
+

@@ -1,88 +1,113 @@
 <script setup>
-import { defineProps, ref, computed } from 'vue';
+import { ref, computed } from 'vue';
 
+// Retrieve auth token and user details
 const authToken = localStorage.getItem('auth-token');
 const userDetails = JSON.parse(localStorage.getItem('userDetails'));
 
+// Props for influencers, campaigns, and filters
 const props = defineProps({
-    inf_data: {
+    inflData: {
+        type: Array,
+        required: true,
+        default: () => [],
+    },
+    campData: {
         type: Array,
         required: true,
     },
-    camp_data: {
-        type: Array,
+    filters: {
+        type: Object,
         required: true,
-    }
+        default: () => ({}),
+    },
 });
 
-const category_search = ref('');
-const niche_search = ref('');
-const reach_search = ref(''); 
+// State to track selected campaign for each influencer
 const selectedCampaign = ref({});
 
-
-// Filter the data from props based on user input
-const filteredData = computed(() =>
-    props.inf_data.filter((item) => {
-        const matchesCategory =
-            !category_search.value ||
-            item.category.toLowerCase().includes(category_search.value.toLowerCase());
-        const matchesNiche =
-            !niche_search.value ||
-            item.niche.toLowerCase().includes(niche_search.value.toLowerCase());
-        const matchesReach = parseInt(item.reach, 10) >= reach_search.value;
+// Filtered influencers based on the provided filters
+const filteredData = computed(() => {
+    return props.inflData.filter((item) => {
+        const matchesCategory = !props.filters.category ||
+            item.category?.toLowerCase().includes(props.filters.category.toLowerCase());
+        const matchesNiche = !props.filters.niche ||
+            item.niche?.toLowerCase().includes(props.filters.niche.toLowerCase());
+        const matchesReach = !props.filters.reach || parseInt(item.reach, 10) >= props.filters.reach;
 
         return matchesCategory && matchesNiche && matchesReach;
-    })
-);
+    });
+});
 
+// Send ad request to a campaign
 const ad_Request = async (influencer_id, campaign_id) => {
-    const message = prompt('Enter a message for the influencer');
-    const payment = prompt('Enter the payment amount');
-
     try {
+        const message = prompt("Enter your message to the influencer:");
+        if (!message) return; // Exit if no message
+
+        const payment = prompt("Enter the payment amount:");
+        if (!payment || isNaN(payment)) return; // Validate payment input
+
         const response = await fetch(`http://127.0.0.1:5000/api/ad_request/${campaign_id}/${influencer_id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization':`Bearer ${authToken}`,
+                'Authorization': `Bearer ${authToken}`,
                 'userDetails': JSON.stringify(userDetails),
             },
             body: JSON.stringify({
-                "message": message,
-                "requirements": {
-                    "post": post,
-                    "story": story,
-                    "video": video,
-                    "image": image,
-                },
-                "payment": payment,
-                "status": "Pending",
-
-            })
+                campaign_id,
+                influencer_id,
+                messages: message,
+                payment_amount: payment,
+            }),
         });
-        return await response.json();
+
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        const data = await response.json();
+        alert("Ad request sent successfully!");
+        console.log(data);
     } catch (error) {
-        console.error('Error:', error);
+        console.error("Error sending ad request:", error);
+        alert("Error sending the ad request.");
     }
 };
-           
+
+// Flag an influencer with a reason
+const flagInfluencer = async (influencer_id) => {
+    try {
+        const reason = prompt("Enter the reason for flagging the influencer:");
+        if (!reason) return; // Exit if no reason
+
+        const response = await fetch("http://127.0.0.1:5000/flag/post", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authentication-Token': authToken,
+            },
+            body: JSON.stringify({
+                influencer_id,
+                reason,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Request failed with status ${response.status}`);
+        }
+
+        alert("Influencer flagged successfully!");
+        console.log(await response.json());
+    } catch (error) {
+        console.error("Error flagging influencer:", error);
+        alert("Error flagging the influencer.");
+    }
+};
 </script>
 
 <template>
-    <form>
-        <label for="category_search">Category</label>
-        <input type="text" id="category_search" v-model="category_search" placeholder="Search by Category" />
-
-        <label for="niche_search">Niche</label>
-        <input type="text" id="niche_search" v-model="niche_search" placeholder="Search by Niche" />
-
-        <label for="reach_search">Reach</label>
-        <input type="range" id="reach_search" v-model="reach_search" min="50000" max="1000000" />
-
-
-    </form>
-
     <div>
         <h3>Filtered Results</h3>
         <table>
@@ -91,28 +116,27 @@ const ad_Request = async (influencer_id, campaign_id) => {
                     <th>Name</th>
                     <th>Category</th>
                     <th>Niche</th>
-                    <th>Reach <small>(Minimum:{{ reach_search }})</small></th>
+                    <th>Reach <small>(Minimum: {{ filters.reach }})</small></th>
                     <th>Add to Campaign</th>
                     <th>Flag</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="(item, index) in filteredData" :key="index">
-                    <a :href="'/influencer/' + item.influencer_id">
-                        <td>{{ item.name }}</td>
-                    </a>
+                <tr v-for="(item, index) in filteredData" :key="item.influencer_id">
+                    <td>
+                        <a :href="'/influencer/' + item.influencer_id">{{ item.name }}</a>
+                    </td>
                     <td>{{ item.category }}</td>
                     <td>{{ item.niche }}</td>
                     <td>{{ item.reach }}</td>
                     <td>
                         <select v-model="selectedCampaign[item.influencer_id]">
                             <option value="" disabled>Select a Campaign</option>
-                            <option v-for="campaign in props.camp_data" :key="campaign.campaign_id"
+                            <option v-for="campaign in campData" :key="campaign.campaign_id"
                                 :value="campaign.campaign_id">
                                 {{ campaign.name }}
                             </option>
                         </select>
-    
                         <button :disabled="!selectedCampaign[item.influencer_id]"
                             @click="ad_Request(item.influencer_id, selectedCampaign[item.influencer_id])">
                             Add
@@ -148,11 +172,5 @@ td {
 
 tr:hover {
     background-color: #f9f9f9;
-}
-input{
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    margin: 5px;
 }
 </style>

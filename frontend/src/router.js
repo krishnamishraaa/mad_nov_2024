@@ -12,6 +12,7 @@ import Sponsor from './pages/sponsor.vue'
 
 
 const routes = [
+  {path	: "/", redirect: "/signin"},
   { path: "/signin", component: SignIn, name: "Signin" },
   { path: "/register", component: Register, name: "Register" },
   { path: "/admin", component: Admin, name: "Admin" },

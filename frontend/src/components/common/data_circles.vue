@@ -1,49 +1,33 @@
 <script setup>
-import { ref } from 'vue';
+import { computed } from 'vue';
 
-const influencerCount = ref(6);
-const sponsorCount = ref(10);
-const campaignCount = ref(4);
-const revenueAmount = ref(100000);
 
-// Function to simulate updating values
-const updateStat = (type, value) => {
-    if (type === 'influencers') {
-        influencerCount.value = value;
-    } else if (type === 'sponsors') {
-        sponsorCount.value = value;
-    } else if (type === 'campaigns') {
-        campaignCount.value = value;
-    } else if (type === 'revenue') {
-        revenueAmount.value = value;
-    }
-};
+const props = defineProps({
+    stats: {
+        type: Object,
+        required: true,
+        default: () => ({}),
+    },
+});
+
+const topStats = computed(() => {
+    return Object.entries(props.stats).slice(0, 6).map(([title, value]) => ({
+        title: title,
+        value: value,
+        type: title.toLowerCase().replace(/\s+/g, '_') 
+    }));
+});
+
 </script>
 
 <template>
     <div class="circle-stats">
-        <!-- Influencers Circle -->
-        <div class="circle" @click="updateStat('influencers', influencerCount + 1)">
-            <div class="circle-title">Influencers</div>
-            <div class="circle-value">{{ influencerCount }}</div>
-        </div>
+        <div class="circle" v-for="stat in topStats" :key="stat.type" @click="updateStat(stat)">
 
-        <!-- Sponsors Circle -->
-        <div class="circle" @click="updateStat('sponsors', sponsorCount + 1)">
-            <div class="circle-title">Sponsors</div>
-            <div class="circle-value">{{ sponsorCount }}</div>
-        </div>
-
-        <!-- Campaigns Circle -->
-        <div class="circle" @click="updateStat('campaigns', campaignCount + 1)">
-            <div class="circle-title">Campaigns</div>
-            <div class="circle-value">{{ campaignCount }}</div>
-        </div>
-
-        <!-- Revenue Circle -->
-        <div class="circle" @click="updateStat('revenue', revenueAmount + 10000)">
-            <div class="circle-title">Revenue</div>
-            <div class="circle-value">${{ revenueAmount }}</div>
+            <div class="circle-value">
+                {{stat.value}}
+            </div>
+            <div class="circle-title">{{ stat.title }}</div>
         </div>
     </div>
 </template>
@@ -52,15 +36,17 @@ const updateStat = (type, value) => {
 .circle-stats {
     display: flex;
     justify-content: space-around;
+    flex-wrap: wrap;
     gap: 10px;
-    margin-top: 0px;
+    margin-top: 20px;
     margin-bottom: auto;
 }
 
+/* Style for individual circles */
 .circle {
     width: 100px;
     height: 100px;
-    background-color: #4CAF50;
+    background-color: #4caf50;
     border-radius: 50%;
     color: white;
     display: flex;
@@ -74,17 +60,18 @@ const updateStat = (type, value) => {
 
 .circle:hover {
     transform: scale(1.1);
-    background-color: #388E3C;
+    background-color: #388e3c;
 }
 
+/* Circle title style */
 .circle-title {
     font-size: 1em;
-    font-weight: bold;
     margin-bottom: 5px;
 }
 
+/* Circle value style */
 .circle-value {
-    font-size: 2em;
+    font-size: 1em;
     font-weight: bold;
 }
 </style>

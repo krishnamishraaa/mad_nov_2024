@@ -69,7 +69,7 @@ const createUser = async () => {
     }
 };
 
-// Function to handle influencer form submission
+// Function to handle Sponsor form submission
 const handleSubmit = async () => {
     if (!user.name || !user.password || !sponsor.industry) {
         alert('Please fill in all required fields.');

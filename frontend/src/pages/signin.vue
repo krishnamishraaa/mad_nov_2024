@@ -39,7 +39,7 @@ const submitForm = async () => {
         const data = await response.json();
 
         localStorage.setItem('auth-token', data.token);
-        localStorage.setItem('userDetails', JSON.stringify({ id: data.id, role: data.role, name: data.name }));
+        localStorage.setItem('userDetails', JSON.stringify({ id: data.id, role: data.role, name: data.name, email: data.email}));
 
         if (data.role === 'influencer') {
             router.push('/influencer')
