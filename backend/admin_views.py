@@ -14,7 +14,7 @@ def get_influencers():
 
 @admin_view.get('/flag')
 @auth_required('token')
-@roles_required('admin')
+# @roles_required('admin')
 def flag():
     flag=Flag.query.all()
 
@@ -25,9 +25,7 @@ def flag():
 @auth_required('token')
 @roles_required('admin')
 def resetflag(id):
-    print(id)
     flag = Flag.query.get(id)
-    print(flag)
     db.session.delete(flag)
     db.session.commit()
     return jsonify({"message": "Flag reset successfully"}), 200
@@ -44,28 +42,3 @@ def deactivate_user(id):
     user.active = True
     db.session.commit()
     return jsonify({"message": "User deactivated successfully"}), 200
-
-
-@admin_view.get("/fetch_edit_profile/<int:id>")
-@auth_required("token")
-@roles_required('influencer')
-def fetch_edit_profile(id):
-   
-    influencer = Influencer.query.filter_by(user_id=id).first()
-
-    return jsonify(influencer.to_dict())
-
-
-@admin_view.put('/editprofile/<int:id>')
-@auth_required("token")
-@roles_required("influencer")
-def edit_profile(id):
-    args=request.get_json()
-    print(args)
-    influencer = Influencer.query.filter_by(user_id=id).first()
-
-    for key, value in args.items():
-        if value:
-            setattr(influencer, key, value)
-    db.session.commit()
-    return jsonify({"message": "Profile updated successfully"}), 200

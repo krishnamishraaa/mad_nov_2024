@@ -52,14 +52,15 @@ const createUser = async () => {
 
                 if (data) {
                     userId = data.userId; // Store the userId
-                    alert(`User created successfully! Your ID is: ${userId}`);
                 } else {
-                    alert('User creation failed');
+                    alert(`Error creating user: ${error.message}`);
+
                 }
 
                 // console.log('User created:', userId.value);
             } else {
-                alert('User creation failed');
+                alert(`Error creating user: ${error.message}`);
+
             }
         } catch (error) {
             console.error('Error:', error);
@@ -160,7 +161,7 @@ const handleSubmit = async () => {
                 <span v-else>Submit</span>
             </button>
         </form>
-        <button href="/signin" class="btn btn-danger">
+        <button href="/signin" type="button" class="btn btn-danger">
             Cancel & Go Back
         </button>
     </div>

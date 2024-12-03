@@ -12,6 +12,11 @@ import adrequest from '/src/components/ad_request/ad-requests.vue'
 import statistics from '../components/common/statistics.vue';
 import { on } from 'events';
 
+const summaryStats = ref({});
+
+const handleStatUpdate = (updatedStat) => {
+    sponsorStats.value = { ...summaryStats.value, ...updatedStat };
+};
 
 const defaultTab = 'create';
 
@@ -58,7 +63,7 @@ const download_campaign = async () => {
     }
 
 }
-const sponsorStats = ref([]);
+
 const getInsights = async () => {
     try {
         const response = await fetch('http://127.0.0.1:5000/api/insights', {
@@ -70,7 +75,7 @@ const getInsights = async () => {
             },
         });
         const data = await response.json();
-        sponsorStats.value = data;
+        summaryStats.value = data;
     } catch (error) {
         console.error('Error fetching insights:', error);
     }
@@ -86,16 +91,16 @@ onMounted(() => {
 <template>
     <h2> Influencer Management and Sponsor Coordination</h2>
     <h3>SPONSOR DASHBOARD</h3>
-    
+
     <tabsLayout :tabs="tabs" :defaultTab="defaultTab">
         <template v-slot:top-right-content>
             <button class="btn btn-success" @click="download_campaign">DOWNLOAD CAMPAIGN DATA</button>
         </template>
-                <template v-slot:right-section>
-                    <datacards :stats="sponsorStats" @statUpdated="handleStatUpdate" />
-                    <!-- <datacards :stats="sponsorStats" /> -->
-                    
-                </template>
+        
+        <template v-slot:right-section>
+            <datacards :stats="summaryStats" @statUpdated="handleStatUpdate" />
+
+        </template>
 
     </tabsLayout>
 </template>

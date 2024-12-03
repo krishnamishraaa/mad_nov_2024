@@ -1,7 +1,6 @@
 from flask_restful import Resource, fields, marshal_with, reqparse, Api, request
 from .model import *
 from flask import request, jsonify, json
-# from sqlalchemy import desc
 from datetime import datetime
 from .data import datastore
 from .instances import cache
@@ -11,17 +10,29 @@ api = Api(prefix="/api")
 
 
 def check_token_and_user():
-	token = request.headers.get("Authorization")
-	if not token:
-		return jsonify({"message": "Token is missing!"}), 403
-	user_details_json = request.headers.get("userDetails")
-	user_details = json.loads(user_details_json)
-	if not user_details:
-		return jsonify({"message": "User details are missing!"}), 403
-	else:
-		user_id = int(user_details["id"])
-		user_role = user_details["role"]
-	return token, user_id, user_role
+    token = request.headers.get("Authorization")
+    if not token:
+        return jsonify({"message": "Token is missing!"}), 403
+    user_details_json = request.headers.get("userDetails")
+    user_details = json.loads(user_details_json)
+    if not user_details:
+        return jsonify({"message": "User details are missing!"}), 403
+    else:
+        user_id = int(user_details["id"])
+        user_role = user_details["role"]
+    return token, user_id, user_role
+
+
+def convert_to_datetime(date_str):
+    if date_str:
+        try:
+            # Parsing the date string into a datetime object
+            return datetime.strptime(date_str, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            # Return None if the date string is invalid
+            return None
+    return None
+
 
 ################## CAMPAIGN ###################################
 output_fields_campaign = {
@@ -45,26 +56,35 @@ class CampaignApi(Resource):
 	@marshal_with(output_fields_campaign)
 	def get(self):
 		token, user_id, user_role = check_token_and_user()
+		
+		if user_role == "influencer":
+			infl_id = User.query.get(user_id).influencer.influencer_id
+		if user_role == "sponsor":
+			sponsor_id = User.query.get(user_id).sponsor.sponsor_id
+
 		id = request.args.get("id")
 
 		if id != "null" and id is not None:
 			campaign = Campaign.query.get(id)
+			
 			return campaign, 200
 		else:
 			if user_role == "admin":
 				campaign = Campaign.query.all()
 				return campaign, 200
 			elif user_role == "sponsor":
-		
-				campaign = Campaign.query.filter_by(sponsor_id=user_id).all()
+				campaign = Campaign.query.filter_by(sponsor_id=sponsor_id).all()
 				return campaign, 200
 			else:
-				campaign = Campaign.query.filter_by().all()
 				
+				campaign = Campaign.query.all()
+
 				return campaign, 200
+
 	def post(self):
 
 		token, user_id, user_role = check_token_and_user()
+		sponsor_id = User.query.get(user_id).sponsor.sponsor_id
 
 		if not token or user_role != "sponsor":
 			return {"message": "Unauthorized access"}, 403
@@ -105,12 +125,15 @@ class CampaignApi(Resource):
 		parser.add_argument("requirements", type=str, required=False, help="Requirements are optional")
 		args = parser.parse_args()
 
+		start_date = datetime.strptime(args["start_date"], "%Y-%m-%d") if args["start_date"] else None
+		end_date = datetime.strptime(args["end_date"], "%Y-%m-%d") if args["end_date"] else None
+
 		new_campaign = Campaign(
-			sponsor_id=user_id,
+			sponsor_id=sponsor_id,
 			name=args["name"],
 			description=args["description"],
-			start_date=args["start_date"],
-			end_date=args["end_date"],
+			start_date=start_date,
+			end_date=end_date,
 			budget=args["budget"],
 			visibility=args["visibility"],
 			status=args["status"],
@@ -128,29 +151,38 @@ class CampaignApi(Resource):
 
 		return {"message": "Campaign created successfully"}, 201
 
-	# PUT method to update the campaign details
+	# PUT method to update the campaign details (Currently doing from sposnor_views.py)
 	@marshal_with(output_fields_campaign)
 	def put(self, id):
-		# token, user_id, user_role = check_token_and_user()
-		# if not token or user_role != "sponsor":
-		# 	return {"message": "Unauthorized access"}, 403
+		token, user_id, user_role = check_token_and_user()
+
+		if not token or user_role != "sponsor":
+			return {"message": "Unauthorized access"}, 403
 
 		campaign = Campaign.query.get(id)
 		if not campaign:
 			return {"message": "Campaign not found"}, 404
 
 		# Define request parser for campaign input
-		args= request.get_json()
-
+		args = request.get_json()
+		
 		# Only update provided fields
 		if args["name"]:
 			campaign.name = args["name"]
 		if args["description"]:
 			campaign.description = args["description"]
 		if args["start_date"]:
-			campaign.start_date = args["start_date"]
+			campaign.start_date = (
+				datetime.strptime(args["start_date"], "%Y-%m-%d")
+				if args["start_date"]
+				else None
+			)
 		if args["end_date"]:
-			campaign.end_date = args["end_date"]
+			campaign.end_date = (
+				datetime.strptime(args["start_date"], "%Y-%m-%d")
+				if args["end_date"]
+				else None
+			)
 		if args["budget"] is not None:
 			campaign.budget = args["budget"]
 		if args["visibility"]:
@@ -191,6 +223,7 @@ class CampaignApi(Resource):
 			return {"message": f"Error deleting campaign: {str(e)}"}, 500
 
 		return {"message": "Campaign deleted successfully"}, 200
+
 
 ###################### INFLUENCER ########################################
 
@@ -434,7 +467,6 @@ output_fields_ad_request = {
 	"status": fields.String,  # Pending, Accepted, Rejected
 }
 
-######## Will do Further from here #####################
 class AdRequestApi(Resource):
 
 	@marshal_with(output_fields_ad_request)
@@ -442,24 +474,63 @@ class AdRequestApi(Resource):
 		token, user_id, user_role = check_token_and_user()
 
 		if user_role == "admin":
-			ad_request = AdRequest.query.all()
-			print(ad_request, "ye wala ad request")
+			filter = request.args.get("filter")
+			print(filter)
+			if filter == "pending":
+				ad_request = AdRequest.query.filter_by(status="Pending").all()
+			elif filter == "accepted":
+				ad_request = AdRequest.query.filter_by(status="Accepted").all()
+			elif filter == "rejected":
+				ad_request = AdRequest.query.filter_by(status="Rejected").all()
+			else:
+				ad_request = AdRequest.query.all()
 			return ad_request, 200
 
 		elif user_role == "sponsor":
-			ad_request = AdRequest.query.all()
-			print(ad_request, "ye sponsor wala ad request")
+			sponsor_id = User.query.get(user_id).sponsor.sponsor_id
+			filter = request.args.get("filter")
+			if filter == "pending":
+				ad_request = AdRequest.query.join(Campaign).filter(
+					Campaign.sponsor_id == sponsor_id, AdRequest.status == "Pending"
+				).all()
+			elif filter == "accepted":
+				ad_request = AdRequest.query.join(Campaign).filter(
+					Campaign.sponsor_id == sponsor_id, AdRequest.status == "Accepted"
+				).all()
+			elif filter == "rejected":
+				ad_request = AdRequest.query.join(Campaign).filter(
+					Campaign.sponsor_id == sponsor_id, AdRequest.status == "Rejected"
+				).all()
+			else:
+				ad_request = AdRequest.query.join(Campaign).filter(
+					Campaign.sponsor_id == sponsor_id
+				).all()
+
 			return ad_request, 200
+
 		elif user_role == "influencer":
-			# retrieving influencer details for the given ID
-			infl = Influencer.query.filter_by(user_id=user_id).first()
-			if not infl:
-				return {"message": "Influencer not found"}, 404
-			ad_request = AdRequest.query.filter_by(
-				influencer_id=infl.influencer_id
-			).all()
+			infl_id = User.query.get(user_id).influencer.influencer_id
+			filter = request.args.get("filter")
+
+			if filter == "pending":
+				ad_request = AdRequest.query.filter_by(
+					influencer_id=infl_id, status="Pending"
+				).all()
+
+			elif filter == "accepted":
+				ad_request = AdRequest.query.filter_by(
+					influencer_id=infl_id, status="Accepted"
+				).all()
+
+			elif filter == "rejected":
+				ad_request = AdRequest.query.filter_by(
+					influencer_id=infl_id, status="Rejected"
+				).all()
+
+			else:
+				ad_request = AdRequest.query.filter_by(influencer_id=infl_id).all()
+
 			return ad_request, 200
-		print("Yaha  aa rha hai")
 		return {"message": "Ad Request not found"}, 404
 
 	def post(self, camp_id, inf_id):
@@ -490,34 +561,71 @@ class AdRequestApi(Resource):
 		if not ad_request:
 			return {"message": "Ad Request not found"}, 404
 
+		# if ad_request.campaign.sponsor_id != user_id or ad_request.influencer.user_id != user_id:
+		# 	return {"message": "Unauthorized access"}, 403
+
 		args = request.get_json()
+		
 		if not args:
 			return {"message": "Missing required fields"}, 400
-
-		if args["param"] == "accept":
-			ad_request.status = "Accepted"
-		elif args["param"] == "reject":
-			ad_request.status = "Rejected"
-		elif args["param"] == "negotiate":
-			ad_request.payment_amount = args["amount"]
-		elif args["param"] == "message":
-			ad_request.messages = args["message"]
+		param = args.get("param")
+		if not param:
+			return {"message": "Missing 'param' field"}, 400
 		try:
-			db.session.commit()
+			if param == "accept":
+				ad_request.status = "Accepted"
+				db.session.commit()
+				return {"message": "Ad Request accepted successfully"}, 200
+			
+			elif param == "reject":
+				ad_request.status = "Rejected"
+				db.session.commit()
+				return {"message": "Ad Request rejected successfully"}, 200
+			
+			elif param == "negotiate":
+				amount = args.get("amount")
+				if not amount:
+					return {"message": "Missing 'amount' field for negotiation"}, 400
+				ad_request.payment_amount = amount
+				db.session.commit()
+				return {"message": "Ad Request negotiated successfully"}, 200
+			
+			elif param == "message":
+				new_message = args.get("message")
+				
+				if not new_message:
+					return {"message": "Missing message data"}, 400
+				
+				# Initialize or load existing messages
+				if ad_request.messages in [None, ""]:
+					current_messages = []
+				
+				else:
+					# Attempt to decode JSON if the format matches a list
+					if ad_request.messages.startswith("[") and ad_request.messages.endswith("]"):
+						try:
+							current_messages = json.loads(ad_request.messages)
+						except json.JSONDecodeError:
+							current_messages = []
+					else:
+						#Treat the existing string as a single message
+						current_messages = [ad_request.messages]
+				current_messages.append(new_message)
+				ad_request.messages = json.dumps(current_messages)
+				db.session.commit()
+				return {"message": "Message added successfully"}, 200
+			else:
+				return {"message": f"Invalid param value: {param}"}, 400
 		except Exception as e:
 			db.session.rollback()
-			return {"message": f"Error updating ad request: {str(e)}"}, 500
-
-		return {"message": "Ad Request updated successfully"}, 200
+			return {"message": f"Error updating ad request: {str(e)}"}, 501
 
 	def delete(self, id):
 		token, user_id, user_role = check_token_and_user()
-		print(user_role)
 		if user_role != "sponsor":
 			return {"message": "Unauthorized access"}, 403
 
 		ad_request = AdRequest.query.get(id)
-		print(ad_request)
 		if not ad_request:
 			return {"message": "Ad Request not found"}, 404
 
@@ -529,18 +637,6 @@ class AdRequestApi(Resource):
 			return {"message": f"Error deleting ad request: {str(e)}"}, 500
 
 		return {"message": "Ad Request deleted successfully"}, 200
-
-
-parser_user = reqparse.RequestParser()
-parser_user.add_argument("email", type=str, required=True, help="Email is required")
-parser_user.add_argument(
-	"password", type=str, required=True, help="Password is required"
-)
-parser_user.add_argument("role", type=str, required=True, help="Role is required")
-parser_user.add_argument(
-	"active", type=bool, required=False, default=True, help="Active status is required"
-)
-parser_user.add_argument("name", type=str, required=False, help="Name is optional")
 
 
 class UserApi(Resource):
@@ -556,9 +652,14 @@ class UserApi(Resource):
 			return {"message": "User Available"}, 200
 
 	def post(self):
+		parser_user = reqparse.RequestParser()
+		parser_user.add_argument("email", type=str, required=True, help="Email is required")
+		parser_user.add_argument("password", type=str, required=True, help="Password is required")
+		parser_user.add_argument("role", type=str, required=True, help="Role is required")
+		parser_user.add_argument("active", type=bool, required=False, default=True, help="Active status is required")
+		parser_user.add_argument("name", type=str, required=False, help="Name is optional")
 
 		args = parser_user.parse_args()
-		print(args)
 		datastore.create_user(
 			email=args["email"],
 			password=generate_password_hash(args["password"]),
@@ -573,10 +674,23 @@ class UserApi(Resource):
 		else:
 			return {"message": "User creation failed"}, 400
 
+class Profilepage(Resource):
+
+	def get(self):
+		params = request.args
+		
+		if "id" not in params:
+			return {"message": "Id parameter is missing"}, 400
+		id = params[0]["id"]
+
+		influnecer_details = Influencer.query.get(id)
+		return influnecer_details, 200
+
 
 class Stats(Resource):
 	def get(self):
 		token, user_id, user_role = check_token_and_user()
+
 		# Give counts related to the users influencer and sponsors
 		users = User.query.count()
 		influencers = Influencer.query.count()
@@ -589,7 +703,7 @@ class Stats(Resource):
 		totalReach=Influencer.query.with_entities(Influencer.reach).all()
 		uniquecategories = Campaign.query.with_entities(Campaign.category).distinct().count()
 		best_category=Campaign.query.with_entities(Campaign.category).distinct().first()
-		
+
 		if user_role == "admin":
 			return {
 			"users": users,
@@ -603,130 +717,337 @@ class Stats(Resource):
 			"uniquecategories": uniquecategories,
 			"best_category": best_category[0],
 			}, 200
-		
+
 		elif user_role == "sponsor":
-			# campaigns = Campaign.query.filter_by(sponsor_id=user_id).count()
-			sponsor_campaign_ids = Campaign.query.with_entities(Campaign.campaign_id).filter_by(sponsor_id=user_id).subquery()
-			campaigns= Campaign.query.filter(Campaign.campaign_id.in_(sponsor_campaign_ids)).count()
-			adRequests_total = AdRequest.query.filter(AdRequest.campaign_id.in_(sponsor_campaign_ids)).count()
-			adRequests_pending = AdRequest.query.filter(AdRequest.campaign_id.in_(sponsor_campaign_ids),AdRequest.status == "Pending").count()
-			adRequests_accepted = AdRequest.query.filter(AdRequest.campaign_id.in_(sponsor_campaign_ids),AdRequest.status == "Accepted").count()
-			adRequests_rejected = AdRequest.query.filter(AdRequest.campaign_id.in_(sponsor_campaign_ids),AdRequest.status == "Rejected").count()
-			total_sponsor_Budget = Sponsor.query.with_entities(Sponsor.budget).filter_by(user_id=user_id).all()
-			spentBudget = AdRequest.query.with_entities(AdRequest.payment_amount).filter(AdRequest.campaign_id.in_(sponsor_campaign_ids)).all()
-			remainingBudget = sum([budget[0] for budget in total_sponsor_Budget]) - sum([spent[0] for spent in spentBudget])
+			sponsor_id = User.query.get(user_id).sponsor.sponsor_id
+			campaigns = Campaign.query.filter_by(sponsor_id=sponsor_id).count()
+			sponsor_campaign_ids = (
+				Campaign.query.with_entities(Campaign.campaign_id)
+				.filter_by(sponsor_id=sponsor_id)
+				.subquery()
+			)
+			campaigns = Campaign.query.filter(
+				Campaign.campaign_id.in_(sponsor_campaign_ids)
+			).count()
+			adRequests_total = AdRequest.query.filter(
+				AdRequest.campaign_id.in_(sponsor_campaign_ids)
+			).count()
+			adRequests_pending = AdRequest.query.filter(
+				AdRequest.campaign_id.in_(sponsor_campaign_ids),
+				AdRequest.status == "Pending",
+			).count()
+			adRequests_accepted = AdRequest.query.filter(
+				AdRequest.campaign_id.in_(sponsor_campaign_ids),
+				AdRequest.status == "Accepted",
+			).count()
+			adRequests_rejected = AdRequest.query.filter(
+				AdRequest.campaign_id.in_(sponsor_campaign_ids),
+				AdRequest.status == "Rejected",
+			).count()
+			total_sponsor_Budget = (
+				Sponsor.query.with_entities(Sponsor.budget)
+				.filter_by(sponsor_id=sponsor_id)
+				.all()
+			)
+			spentBudget = (
+				AdRequest.query.with_entities(AdRequest.payment_amount)
+				.filter(AdRequest.campaign_id.in_(sponsor_campaign_ids))
+				.all()
+			)
+			remainingBudget = sum([budget[0] for budget in total_sponsor_Budget]) - sum(
+				[spent[0] for spent in spentBudget]
+			)
 			return {
-		"campaigns": campaigns,
-		"adRequests_total": adRequests_total,
-		"adRequests_pending": adRequests_pending,
-		"adRequests_accepted": adRequests_accepted,
-		"adRequests_rejected": adRequests_rejected,
-		"totalBudget": sum([budget[0] for budget in total_sponsor_Budget]),
-		"remainingBudget": remainingBudget,
+				"campaigns": campaigns,
+				"adRequests_total": adRequests_total,
+				"adRequests_pending": adRequests_pending,
+				"adRequests_accepted": adRequests_accepted,
+				"adRequests_rejected": adRequests_rejected,
+				"totalBudget": sum([budget[0] for budget in total_sponsor_Budget]),
+				"remainingBudget": remainingBudget,
 			}, 200
 
 		elif user_role == "influencer":
-			adRequests_total = AdRequest.query.filter_by(influencer_id=user_id).count()
-			adRequests_pending = AdRequest.query.filter_by(influencer_id=user_id, status="Pending").count()
-			adRequests_accepted = AdRequest.query.filter_by(influencer_id=user_id, status="Accepted").count()
-			adRequests_rejected = AdRequest.query.filter_by(influencer_id=user_id, status="Rejected").count()
-			earnings=AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(influencer_id=user_id).all()
-			totalEarnings = sum([earn[0] for earn in earnings])
-			EarningThisMonth = AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(influencer_id=user_id).filter(AdRequest.created_at >= datetime.now().replace(day=1)).all()
-			return{
+			infl_id = User.query.get(user_id).influencer.influencer_id
+			adRequests_total = AdRequest.query.filter_by(influencer_id=infl_id).count()
+			adRequests_pending = AdRequest.query.filter_by(
+				influencer_id=infl_id, status="Pending"
+			).count()
+			adRequests_accepted = AdRequest.query.filter_by(
+				influencer_id=infl_id, status="Accepted"
+			).count()
+			adRequests_rejected = AdRequest.query.filter_by(
+				influencer_id=infl_id, status="Rejected"
+			).count()
+			earnings = (
+				AdRequest.query.with_entities(AdRequest.payment_amount)
+				.filter_by(influencer_id=infl_id)
+				.all()
+			)
+			totalEarnings = sum([earn[0] for earn in earnings if earn[0] is not None])
+			EarningThisMonth = (
+				AdRequest.query.with_entities(AdRequest.payment_amount)
+				.filter_by(influencer_id=infl_id)
+				.filter(AdRequest.created_at >= datetime.now().replace(day=1))
+				.all()
+			)
+			return {
 				"adRequests_total": adRequests_total,
 				"adRequests_pending": adRequests_pending,
 				"adRequests_accepted": adRequests_accepted,
 				"adRequests_rejected": adRequests_rejected,
 				"totalEarnings": totalEarnings,
-				"EarningThisMonth": sum([earn[0] for earn in EarningThisMonth]),
+				"EarningThisMonth": sum(
+					[earn[0] for earn in EarningThisMonth if earn[0] is not None]
+				),
 			}
 		else:
 			return {"message": "Unauthorized access"}, 403
 
 class Insights(Resource):
 
-    def get(self):
-        token, user_id, user_role = check_token_and_user()
-        best_category = (
+	def get(self):
+		token, user_id, user_role = check_token_and_user()
+
+		best_category_overall = (
 			Campaign.query.with_entities(Campaign.category)
-			.filter_by(sponsor_id=user_id)
+			.order_by(Campaign.budget.desc())
 			.distinct()
 			.first()
 		)
-        top_influencers = (
-			Influencer.query.order_by(Influencer.reach.desc()).limit(10).all()
+		top_influencers = (
+			Influencer.query.order_by(Influencer.reach.desc()).limit(5).all()
 		)
-        highValue_campaigns = (
-			Campaign.query.filter_by(sponsor_id=user_id)
-			.order_by(Campaign.budget.desc())
-			.limit(5)
-			.all()
+		top_influencers = [influencer.to_dict() for influencer in top_influencers]
+		highValue_campaigns = (
+			Campaign.query.order_by(Campaign.budget.desc()).limit(5).all()
 		)
-        trending_campaigns = (
-			AdRequest.query.distinct(AdRequest.campaign_id).limit(5).all()
+		highValue_campaigns = [campaign.to_dict() for campaign in highValue_campaigns]
+		trending_campaigns = (
+			Campaign.query.order_by(Campaign.interested_influencers).limit(5).all()
 		)
-        # Budgets, Total vs Spent
-        totalBudgetquery = (
-			Sponsor.query.with_entities(Sponsor.budget)
-			.filter_by(user_id=user_id)
-			.all()
-		)
-        totalBudget = sum([budget[0] for budget in totalBudgetquery])
-        # spentBudgetquery = AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(AdRequest.campaign_id in Campaign.query.filter_by(sponsor_id=user_id)).all()
-        spentBudgetquery = (
-			AdRequest.query.with_entities(AdRequest.payment_amount)
-			.filter(
-				AdRequest.campaign_id.in_(
-					Campaign.query.filter_by(sponsor_id=user_id).with_entities(
-						Campaign.campaign_id
-					)
-				)
+		trending_campaigns = [
+			(
+				{
+					"name": campaign.name,
+					"sponsor": Campaign.query.get(campaign.campaign_id).sponsor.name,
+				}
 			)
-			.all()
-		)
-        earning_this_month=AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(influencer_id=user_id).filter(AdRequest.created_at >= datetime.now().replace(day=1)).all()
-        totalEarning = AdRequest.query.with_entities(AdRequest.payment_amount).filter_by(influencer_id=user_id).all()
+			for campaign in trending_campaigns
+		]
+		today_signups = User.query.filter(
+			User.create_datetime >= datetime.now().replace(hour=0, minute=0, second=0)
+		).count()
 
-        top_influencers = [influencer.to_dict() for influencer in top_influencers]
-        highValue_campaigns = [campaign.to_dict() for campaign in highValue_campaigns]
-        trending_campaigns = [campaign.campaign_id for campaign in trending_campaigns]
-        spentBudget = sum([spent[0] for spent in spentBudgetquery])
-        remainingBudget = totalBudget - spentBudget
-
-        if user_role == "admin":
-            return {
+		if user_role == "admin":
+			return {
 				"top influencers": top_influencers,
 				"trending campaigns": trending_campaigns,
+				"best category": best_category_overall[0],
+				"today signups": today_signups,
 			}, 200
-        if user_role == "sponsor":
-            return {
-                "top influencers": top_influencers,
-                "high Value campaigns": highValue_campaigns,
-                "best category": best_category[0],
-                "My Budget": totalBudget,
-                "spent Budget": spentBudget,
-                "remaining Budget": remainingBudget,
-            }, 200
-        else:
-            return {
-                "top_influencers": top_influencers,
-                "trending_campaigns": trending_campaigns,
-            },200
 
-        # Trending Ad Requests
+		if user_role == "influencer":
+			infl_id = User.query.get(user_id).influencer.influencer_id
+			earning_this_month = (
+				AdRequest.query.with_entities(AdRequest.payment_amount)
+				.filter_by(influencer_id=infl_id)
+				.filter(AdRequest.created_at >= datetime.now().replace(day=1))
+				.all()
+			)
+			totalEarning = (
+				AdRequest.query.with_entities(AdRequest.payment_amount)
+				.filter_by(influencer_id=infl_id)
+				.all()
+			)
+			totalEarning = sum(
+				[earn[0] for earn in totalEarning if earn[0] is not None]
+			)
+			earning_this_month = sum([earn[0] for earn in earning_this_month if earn[0] is not None])
 
-        # Budgets, Total vs Spent
+			return {
+				"top_influencers": top_influencers,
+				"trending_campaigns": trending_campaigns,
+				"totalEarning": totalEarning,
+				"earning_this_month": earning_this_month,
+			}, 200
 
-        # Top 10 Influencers on Platform
+		if user_role == "sponsor":
+			sponsor_id = User.query.get(user_id).sponsor.sponsor_id
+			best_category = (
+				Campaign.query.with_entities(Campaign.category).filter_by(sponsor_id=sponsor_id)
+				.order_by(Campaign.budget.desc())
+				.distinct()
+				.first().category
+			)
+			totalBudget = (
+				Sponsor.query
+				.filter_by(sponsor_id=sponsor_id).first().budget
+			)
 
-        # Earnings, Total vs This Month
+			spentBudgetquery = (
+				AdRequest.query.with_entities(AdRequest.payment_amount)
+				.filter(
+					AdRequest.campaign_id.in_(
+						Campaign.query.filter_by(sponsor_id=sponsor_id).with_entities(
+							Campaign.campaign_id
+						)
+					)
+				)
+				.all()
+			)
+			spentBudget = sum([spent[0] for spent in spentBudgetquery if spent[0] is not None])
+			remainingBudget = totalBudget - spentBudget
+			return {
+				"top influencers": top_influencers,
+				"high Value campaigns": highValue_campaigns,
+				"best category": best_category,
+				"My Budget": totalBudget,
+				"spent Budget": spentBudget,
+				"remaining Budget": remainingBudget,
+			}, 200
 
 
-api.add_resource(CampaignApi,"/campaign","/campaign/<int:id>",methods=["GET", "PUT", "POST", "DELETE"],)
+class UpdateCampaign(Resource):
+	def put(self, id):
+		campaign = Campaign.query.get(id)
+		if not campaign:
+			return {"message": "Campaign not found"}, 404
+		
+		args = request.get_json()
+		new_influencer = args.get("interested_influencers")
+		if not new_influencer or not isinstance(new_influencer, dict):
+			return {"message": "Invalid or missing 'interested_influencers' data"}, 400
+		
+		# Deserialize current influencers or initialize as an empty list
+		try:
+			current_influencers = json.loads(campaign.interested_influencers) if campaign.interested_influencers else []
+			
+			if not isinstance(current_influencers, list):
+				current_influencers = []
+		except json.JSONDecodeError:
+			current_influencers = []
+			# Append the new influencer and serialize back to JSON
+		current_influencers.append(new_influencer)
+		try:
+			campaign.interested_influencers = json.dumps(current_influencers)
+		except Exception as e:
+			return {"message": f"Error serializing influencer data: {str(e)}"}, 500
+		
+		 # Commit changes to the database
+		try:
+			db.session.commit()
+			return {"message": "Campaign updated successfully"}, 200
+		except Exception as e:
+			db.session.rollback()
+			return {"message": f"Error updating campaign: {str(e)}"}, 500
+
+class Campaign_Filter(Resource):
+	@cache.cached(timeout=30)
+	def get(self):
+		category = request.args.get('category')
+		niche = request.args.get('niche')
+		budget = request.args.get('budget')
+		requirement = request.args.get('requirement')
+		
+		query = Campaign.query
+		
+		if category:
+			query = query.filter(Campaign.category.ilike(f"%{category}%"))
+			
+		if niche:
+			query = query.filter(Campaign.niche.ilike(f"%{niche}%"))
+		
+		if budget:
+			query = query.filter(Campaign.budget>=budget)
+			
+		if requirement:
+			query = query.filter(Campaign.requirements.ilike(f"%{requirement}%"))  # Assuming 'requirements' is a column
+		
+		campaigns = query.all()
+		
+		return {"campaigns": [campaign.to_dict() for campaign in campaigns]}, 200
+
+class ForGraphs(Resource):
+	def get(self):
+		# time series data for campaigns
+		campaigns = Campaign.query.all()
+		campaigns = [campaign.to_dict() for campaign in campaigns]
+
+		# Convert 'start_date' to datetime and handle None values
+		for campaign in campaigns:
+			campaign["start_date"] = convert_to_datetime(campaign.get("start_date"))
+
+		# Sort campaigns by start_date, treating None as datetime.min
+		campaigns = sorted(campaigns, key=lambda x: x["start_date"] or datetime.min)
+		
+		campaigns_count_over_time = {}
+		for campaign in campaigns:
+			date = campaign["start_date"]
+			if date:
+				date_str = date.strftime("%Y-%m-%d")  # Format the date as string
+				if date_str in campaigns_count_over_time:
+					campaigns_count_over_time[date_str] += 1
+				else:
+					campaigns_count_over_time[date_str] = 1
+		
+		# time series data for ad requests
+		ad_requests = AdRequest.query.all()
+		ad_requests = [ad_request.to_dict() for ad_request in ad_requests]
+
+		# Convert 'created_at' to datetime and handle None values
+		for ad_request in ad_requests:
+			ad_request["created_at"] = ad_request.get("created_at")
+
+		# Sort ad_requests by created_at, treating None as datetime.min
+		ad_requests = sorted(ad_requests, key=lambda x: x["created_at"] or datetime.min)
+		
+		ad_requests_count_over_time = {}
+		for ad_request in ad_requests:
+			date = ad_request["created_at"]
+			if date:
+				date_str = date.strftime("%Y-%m-%d")  # Format the date as string
+				if date_str in ad_requests_count_over_time:
+					ad_requests_count_over_time[date_str] += 1
+				else:
+					ad_requests_count_over_time[date_str] = 1
+
+		# time series data for user signups
+		users = User.query.all()
+		users = [user.to_dict() for user in users]
+
+		# Convert 'create_datetime' to datetime and handle None values
+		for user in users:
+			user["create_datetime"] = user.get("create_datetime")
+
+		# Sort users by create_datetime, treating None as datetime.min
+		users = sorted(users, key=lambda x: x["create_datetime"] or datetime.min)
+		
+		users_count_over_time = {}
+		for user in users:
+			date = user["create_datetime"]
+			if date:
+				date_str = date.strftime("%Y-%m-%d")  # Format the date as string
+				if date_str in users_count_over_time:
+					users_count_over_time[date_str] += 1
+				else:
+					users_count_over_time[date_str] = 1
+		
+		return {
+			"campaigns": campaigns_count_over_time,
+			"ad_requests": ad_requests_count_over_time,
+			"users": users_count_over_time,
+		}, 200
+
+
+api.add_resource(CampaignApi,"/campaign","/campaign/<int:id>",methods=["GET", "PUT", "POST", "DELETE"])
 api.add_resource(InfluencerApi,"/influencer","/influencer/<int:id>",methods=["GET", "POST", "PUT", "DELETE"],)
 api.add_resource(SponsorApi,"/sponsors","/sponsors/<int:id>",methods=["GET", "POST", "PUT", "DELETE"],)
 api.add_resource(AdRequestApi,"/ad_request","/ad_request/<int:id>", "/ad_request/<int:camp_id>/<int:inf_id>",methods=["GET", "POST", "PUT", "DELETE"],)
 api.add_resource(UserApi,"/emailcheck","/user","/user/<string:email>" "/user/<int:id>",methods=["GET", "POST", "PUT", "DELETE"],)
 api.add_resource(Stats, "/stats", methods=["GET"])
 api.add_resource(Insights, "/insights", methods=["GET"])
+api.add_resource(UpdateCampaign, "/request_campaign/<int:id>", methods=["PUT"])
+api.add_resource(Profilepage, "/profilepage", methods=["GET"])
+api.add_resource(Campaign_Filter, "/campaign_filter", methods=["GET"])
+api.add_resource(ForGraphs, "/for_graphs", methods=["GET"])

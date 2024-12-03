@@ -17,6 +17,21 @@ const props = defineProps({
         required: false,
         default: "",
     },
+    category: {
+        type: String,
+        required: false,
+        default: "",
+    },
+    budget: {
+        type: String,
+        required: false,
+        default: "",
+    },
+    ad_requests: {
+        type: Array,
+        required: false,
+        default: () => [],
+    },
 });
 
 
@@ -30,12 +45,16 @@ const gradientStyle = computed(() => {
 
 <template>
     <div class="card" :style="gradientStyle">
-       
+
         <div class="card-content">
             <h3>{{ title }}</h3>
-            <p v-if="description">{{ description }}</p>
+
             <p v-if="budget">Budget: {{ budget }}</p>
-            <p v-if="category">Category: {{ category }}</p>
+        
+            <small>{{ progress }}% </small>
+        
+
+
         </div>
     </div>
 
@@ -62,5 +81,12 @@ const gradientStyle = computed(() => {
     position: relative;
     z-index: 2;
     text-align: center;
+    color: rgb(249, 134, 4);
+    margin:auto
+}
+p{
+    color: rgb(203, 6, 6);
+    margin: 0px;
+    padding: 0px;
 }
 </style>

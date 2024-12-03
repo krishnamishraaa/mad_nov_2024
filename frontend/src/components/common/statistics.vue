@@ -1,7 +1,8 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import datacircles from '/src/components/common/data_circles.vue';
-import datacards from '/src/components/common/data_cards.vue';
+import chart_page from '/src/components/common/charts.vue';
+
+const emit= defineEmits(['totalInfluencers', 'totalCampaigns']);
 
 const stats_data = ref({});
 const summaryStats = ref({});
@@ -22,7 +23,7 @@ const fetchStatistics = async () => {
         });
         const data = await response.json();
         stats_data.value = data;
-        console.log(data);
+       
 
         if (data.remainingBudget && data.totalBudget) {
             budgetUsage.value = ((data.totalBudget - data.remainingBudget) / data.totalBudget) * 100;
@@ -152,8 +153,7 @@ onMounted(() => {
         <section class="charts">
             <h2>Performance Overview</h2>
             <div class="chart">
-                <datacards />
-                <datacircles :stats="sponsorStats" @statUpdated="handleStatUpdate"/>
+                <chart_page apiEndpoint="http://127.0.0.1:5000/api/for_graphs"/>
             </div>
         </section>
 

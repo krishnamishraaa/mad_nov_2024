@@ -15,32 +15,38 @@ const tabs = [
     { key: 'publiccampaignsearch', label: 'Public Campaign Search', component: publiccampaignsearch },
 ];
 
-const summaryStats = ref({});
+
 const authToken = localStorage.getItem('auth-token');
 const userDetails = JSON.parse(localStorage.getItem('userDetails'));
-const fetchStatistics = async () => {
+
+const summaryStats = ref({});
+
+const handleStatUpdate = (updatedStat) => {
+    sponsorStats.value = { ...summaryStats.value, ...updatedStat };
+};
+
+const getInsights = async () => {
     try {
-        const response = await fetch('http://127.0.01:5000/api/insights', {
+        const response = await fetch('http://127.0.0.1:5000/api/insights', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${authToken}`,
-                'userDetails': JSON.stringify(userDetails),
+                'userDetails': localStorage.getItem('userDetails'),
             },
         });
         const data = await response.json();
         summaryStats.value = data;
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error fetching insights:', error);
     }
 };
-const handleStatUpdate = (updatedStat) => {
-    summaryStats.value = { ...summaryStats.value, ...updatedStat };
-};
-onMounted(() => {
-    fetchStatistics();
 
+
+onMounted(() => {
+    getInsights();
 });
+
 </script>
 
 <template>

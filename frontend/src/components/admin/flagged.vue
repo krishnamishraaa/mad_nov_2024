@@ -88,7 +88,7 @@ onMounted( async () => {
                 <td>{{ flag.flag_id }}</td>
                 <td>{{ flag.sponsor_id }}</td>
                 <td>{{ flag.influencer_id }}</td>
-                <td>{{ flag.reason }}</td>
+                <td class="longMsg">{{ flag.reason }}</td>
                 <td><button class="btn btn-success" @click="resetFlag(flag.flag_id)" >Reset Flag</button></td>
                 <td><button class="btn btn-danger" @click="deactivateUser(flag.influencer_id)">Deactivate</button></td>
             </tr>
@@ -97,4 +97,12 @@ onMounted( async () => {
 
     
 </template>
+<style scoped>
+
+.longMsg {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+};
+</style>
 

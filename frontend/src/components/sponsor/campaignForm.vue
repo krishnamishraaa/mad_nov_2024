@@ -54,7 +54,7 @@ const submit_campaign = async () => {
         requirements: requirements.value.toString(),
     };
 
-    const url = selectedCampaign.value ? `http://127.0.0.1:5000/api/campaign/${selectedCampaign.value.campaign_id}` : 'http://127.0.0.1:5000/campaign';
+    const url = selectedCampaign.value ? `http://127.0.0.1:5000/campaign/${selectedCampaign.value.campaign_id}` : 'http://127.0.0.1:5000/campaign';
     const method = selectedCampaign.value ? 'PUT' : 'POST';
 
     try {

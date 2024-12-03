@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { defineProps, defineEmits } from 'vue';
 
-// Props to accept dynamic data (now expecting an object instead of separate values)
+// Props to accept dynamic data (expecting an object)
 const props = defineProps({
     stats: {
         type: Object,
@@ -10,27 +10,26 @@ const props = defineProps({
     },
 });
 
-// Store updated stats
-const stats = ref(props.stats);
+// Emit updated stats back to parent component
+const emit = defineEmits(['updateStats']);
 
+// Directly use props.stats as it is already reactive
 const handleStatUpdate = (title, value) => {
-    // Update the value of the selected stat
-    stats.value[title] = value;
+    props.stats[title] = value; 
+    emit('updateStats', props.stats);
 };
-
 </script>
 
 <template>
     <div class="stats-cards">
         <!-- Loop through the stats dictionary and display each card dynamically -->
-        <div v-for="(value, title) in stats" :key="title" class="card" @click="handleStatUpdate(title, value)">
+        <div v-for="(value, title) in props.stats" :key="title" class="card" @click="handleStatUpdate(title, value)">
             <div class="card-title">{{ title.toUpperCase() }}</div>
 
             <!-- Check if value is an array and display accordingly -->
             <div class="card-value" v-if="Array.isArray(value)">
                 <div v-for="(val, index) in value" :key="index">
-                    <!-- Assuming val is an object with properties 'name', 'reach', 'budget' -->
-                    <p> {{ val.name }}:<small> {{ val.reach || val.budget }}</small></p>
+                    <p> {{ val.name }}:<small> {{ val.reach || val.budget || val.sponsor }}</small></p>
                 </div>
             </div>
 
@@ -42,12 +41,10 @@ const handleStatUpdate = (title, value) => {
     </div>
 </template>
 
-
 <style scoped>
 .stats-cards {
     display: flex;
-    justify-content: space-around;
-    gap: 20px;
+    justify-content:flex-start;
     margin-top: 30px;
     flex-wrap: wrap;
 }
@@ -62,6 +59,7 @@ const handleStatUpdate = (title, value) => {
     text-wrap: wrap;
     width: 150px;
     cursor: pointer;
+    margin:auto;
     transition: transform 0.2s;
 }
 
@@ -79,11 +77,18 @@ const handleStatUpdate = (title, value) => {
 
 /* Card value style */
 .card-value {
-    font-size: 0.8em;
+    font-size: 0.75em;
     color: #4caf50;
 }
 
 .card-value span {
     color: #ff5722;
+}
+p{
+    text-overflow: ellipsis;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+
 }
 </style>

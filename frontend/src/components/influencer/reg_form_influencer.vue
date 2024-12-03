@@ -59,7 +59,6 @@ const createUser = async () => {
 
                 if (data) {
                     userId = data.userId; // Store the userId
-                    alert(`User created successfully! Your ID is: ${userId}`);
                     console.log('ye hai User ID:', userId);
                 } else {
                     alert('User creation failed');

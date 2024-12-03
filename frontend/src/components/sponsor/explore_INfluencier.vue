@@ -85,14 +85,12 @@ onMounted(async () => {
         <div v-else-if="!allinfluencers || allinfluencers.length === 0" class="no-influencers">No influencers found.
         </div>
         <div v-else>
-            <!-- Search Filters Component -->
-            <!-- <searchFilter @submit=": filters =" filters" @updateFilters="updateFilters"" /> -->
 
             <!-- Influencer Table Component -->
-            <!-- <influencer_Tables v-if=" allinfluencers && campaigns" :inflData="filteredInfluencers" -->
-            <!-- :campData="campaigns" :filters="filters" /> -->
+            <influencer_Tables v-if=" allinfluencers && campaigns" :inflData="filteredInfluencers"
+            :campData="campaigns" :filters="filters" />
             <search_Filter :filters="filters" @updateFilters="updateFilters" />
-            <filtered_table :inflData="filteredInfluencers" :filters="filters" :campData="allCampaigns" />
+            <filtered_table :inflData="filteredInfluencers" :filters="filters" :campData="campaigns" />
 
         </div>
     </div>

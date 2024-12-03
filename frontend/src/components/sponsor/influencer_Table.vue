@@ -4,6 +4,9 @@ import { ref, computed } from 'vue';
 // Retrieve auth token and user details
 const authToken = localStorage.getItem('auth-token');
 const userDetails = JSON.parse(localStorage.getItem('userDetails'));
+const sentRequests = ref({}); 
+const flaggedInfluencers = ref({});
+
 
 // Props for influencers, campaigns, and filters
 const props = defineProps({
@@ -42,8 +45,12 @@ const filteredData = computed(() => {
 // Send ad request to a campaign
 const ad_Request = async (influencer_id, campaign_id) => {
     try {
-        const message = prompt("Enter your message to the influencer:");
-        if (!message) return; // Exit if no message
+        const message_input = prompt("Enter your message to the influencer:");
+        if (!message_input) return; // Exit if no message
+
+        const message = userDetails.name.split(' ')[0] + ": " + message_input;
+
+
 
         const payment = prompt("Enter the payment amount:");
         if (!payment || isNaN(payment)) return; // Validate payment input
@@ -69,12 +76,42 @@ const ad_Request = async (influencer_id, campaign_id) => {
 
         const data = await response.json();
         alert("Ad request sent successfully!");
-        console.log(data);
     } catch (error) {
         console.error("Error sending ad request:", error);
         alert("Error sending the ad request.");
     }
 };
+
+const fetchSentRequests = async () => {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/api/ad_request', {
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'userDetails': JSON.stringify(userDetails),
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to fetch existing ad requests: ${response.status}`);
+        }
+
+        const adRequests = await response.json();
+
+        // Populate sentRequests object
+        adRequests.forEach((request) => {
+            const { influencer_id, campaign_id } = request;
+            if (!sentRequests.value[influencer_id]) {
+                sentRequests.value[influencer_id] = new Set();
+            }
+            sentRequests.value[influencer_id].add(campaign_id);
+        });
+    } catch (error) {
+        console.error("Error fetching sent requests:", error);
+    }
+};
+
+// Fetch sent requests on component mount
+fetchSentRequests();
 
 // Flag an influencer with a reason
 const flagInfluencer = async (influencer_id) => {
@@ -105,11 +142,32 @@ const flagInfluencer = async (influencer_id) => {
         alert("Error flagging the influencer.");
     }
 };
+
+const flaggedinfluencers1 = async () => {
+    try {
+        const response = await fetch('http://127.0.0.1:5000/flag'
+        , {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authentication-Token': authToken,
+            },
+        });
+        const data = await response.json();
+        data.forEach((influencer) => {
+            flaggedInfluencers.value[influencer.influencer_id] = true;
+        });
+    } catch (error) {
+        console.error('Error fetching flagged influencers:', error);
+    }
+};
+
+flaggedinfluencers1();
+
 </script>
 
 <template>
     <div>
-        <h3>Filtered Results</h3>
         <table>
             <thead>
                 <tr>
@@ -123,27 +181,27 @@ const flagInfluencer = async (influencer_id) => {
             </thead>
             <tbody>
                 <tr v-for="(item, index) in filteredData" :key="item.influencer_id">
-                    <td>
-                        <a :href="'/influencer/' + item.influencer_id">{{ item.name }}</a>
-                    </td>
+                    <td>{{ item.name }} </td>
                     <td>{{ item.category }}</td>
                     <td>{{ item.niche }}</td>
                     <td>{{ item.reach }}</td>
                     <td>
                         <select v-model="selectedCampaign[item.influencer_id]">
-                            <option value="" disabled>Select a Campaign</option>
+                            <option value="" disabled Selected>Select a Campaign</option>
                             <option v-for="campaign in campData" :key="campaign.campaign_id"
                                 :value="campaign.campaign_id">
                                 {{ campaign.name }}
                             </option>
                         </select>
-                        <button :disabled="!selectedCampaign[item.influencer_id]"
+                        <button :disabled="!selectedCampaign[item.influencer_id] ||
+                            (sentRequests[item.influencer_id]?.has(selectedCampaign[item.influencer_id]) ?? false)"
                             @click="ad_Request(item.influencer_id, selectedCampaign[item.influencer_id])">
                             Add
                         </button>
                     </td>
                     <td>
-                        <button @click="flagInfluencer(item.influencer_id)">Flag</button>
+                        <button :disabled="flaggedInfluencers[item.influencer_id]"
+                            @click="flagInfluencer(item.influencer_id)">Flag</button>
                     </td>
                 </tr>
             </tbody>

@@ -64,7 +64,7 @@ onMounted(() => {
     <div class="card-container">
         <!-- Loop through projects and render ProgressCard -->
         <ProgressCard v-for="(project, index) in projects" :key="index" :title="project.name"
-            :progress="progressValues[index]" :description="project.description" />
+            :progress="progressValues[index]" :description="project.description" :category="project.category" :budget="project.budget" :ad_requests="project.ad_requests"/>
     </div>
 </template>
 
