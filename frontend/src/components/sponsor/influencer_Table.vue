@@ -1,14 +1,14 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-// Retrieve auth token and user details
+
 const authToken = localStorage.getItem('auth-token');
 const userDetails = JSON.parse(localStorage.getItem('userDetails'));
 const sentRequests = ref({}); 
 const flaggedInfluencers = ref({});
 
 
-// Props for influencers, campaigns, and filters
+
 const props = defineProps({
     inflData: {
         type: Array,
@@ -26,10 +26,10 @@ const props = defineProps({
     },
 });
 
-// State to track selected campaign for each influencer
+
 const selectedCampaign = ref({});
 
-// Filtered influencers based on the provided filters
+
 const filteredData = computed(() => {
     return props.inflData.filter((item) => {
         const matchesCategory = !props.filters.category ||
@@ -42,18 +42,18 @@ const filteredData = computed(() => {
     });
 });
 
-// Send ad request to a campaign
+
 const ad_Request = async (influencer_id, campaign_id) => {
     try {
         const message_input = prompt("Enter your message to the influencer:");
-        if (!message_input) return; // Exit if no message
+        if (!message_input) return; 
 
         const message = userDetails.name.split(' ')[0] + ": " + message_input;
 
 
 
         const payment = prompt("Enter the payment amount:");
-        if (!payment || isNaN(payment)) return; // Validate payment input
+        if (!payment || isNaN(payment)) return; 
 
         const response = await fetch(`http://127.0.0.1:5000/api/ad_request/${campaign_id}/${influencer_id}`, {
             method: 'POST',
@@ -110,10 +110,10 @@ const fetchSentRequests = async () => {
     }
 };
 
-// Fetch sent requests on component mount
+
 fetchSentRequests();
 
-// Flag an influencer with a reason
+
 const flagInfluencer = async (influencer_id) => {
     try {
         const reason = prompt("Enter the reason for flagging the influencer:");

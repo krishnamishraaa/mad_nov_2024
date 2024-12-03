@@ -9,17 +9,17 @@ const props = defineProps({
     },
 });
 
-// Emit updates to parent
+
 const emit = defineEmits(['updateFilters']);
 
-// Define reactive filter fields
+
 const filterFields = ref(
     Object.fromEntries(
         Object.keys(props.filters).map((key) => [key, props.filters[key] || ''])
     )
 );
 
-// Watch for changes in any filter field
+
 watch(
     () => filterFields.value,
     (newFilters) => {

@@ -64,7 +64,7 @@ class Sponsor(db.Model):
     company_website = db.Column(db.String(255))
     notes = db.Column(db.String(200))
     approved = db.Column(db.Boolean, default=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False,)  # Reference to the User table
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False,) 
     campaigns = db.relationship('Campaign', backref='sponsor', lazy=True)
 
     def to_dict(self):
@@ -89,7 +89,7 @@ class Influencer(db.Model):
     reach = db.Column(db.Integer)
     social_links = db.Column(db.JSON)
     website = db.Column(db.String(255))
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Reference to the User table
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) 
     ad_requests = db.relationship('AdRequest', backref='influencer', lazy=True)
 
     def to_dict(self):
@@ -122,8 +122,7 @@ class Campaign(db.Model):
     status = db.Column(db.String(10), nullable=False)  # Status: Active, Completed, Cancelled
     interested_influencers = db.Column(db.Text(200))  # List of influencer ids
 
-    ad_requests = db.relationship('AdRequest', backref='campaign', lazy=True)  # Campaign can have many Ad Requests
-
+    ad_requests = db.relationship('AdRequest', backref='campaign', lazy=True)  
 
     def change_status(self):
         if self.status not in ['Active', 'Completed', 'Cancelled']:

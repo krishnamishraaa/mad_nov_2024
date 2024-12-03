@@ -24,7 +24,7 @@ const fetchSponsors = async (action) => {
         }
 
         const data = await response.json();
-        sponsors.value = data; // Store the fetched sponsors data
+        sponsors.value = data; 
         emit('sponsorCountUpdated', sponsors.value.length);
 
     } catch (error) {
@@ -71,7 +71,7 @@ const rejectSponsor = async (id) => {
     }
 };
 
-// Fetch data on component mount
+
 onMounted(async () => {
     await fetchSponsors('unapproved');
     console.log('Sponsors:', sponsors.value);

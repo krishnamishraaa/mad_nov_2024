@@ -1,7 +1,7 @@
 <script setup>
 import { computed, defineProps } from "vue";
 
-// Props for the reusable component
+
 const props = defineProps({
     title: {
         type: String,
@@ -35,7 +35,7 @@ const props = defineProps({
 });
 
 
-// Compute the gradient based on the progress
+
 const gradientStyle = computed(() => {
     return {
         backgroundImage: `linear-gradient(to right, #4caf50 ${props.progress}%, transparent ${props.progress}%)`,

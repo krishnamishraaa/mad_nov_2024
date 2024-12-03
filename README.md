@@ -18,7 +18,7 @@ ubuntu 22.04 WSL
 
 </li>
 <l1>
-venvu/bin/activate </li>
+source venvu/bin/activate </li>
 <li>redis-server</li>
 </ul>
 

@@ -12,7 +12,7 @@ def setup_periodic_tasks(sender, **kwargs):
         send_email.s("admin@email.com", "Test_Subject_Email")
     )
     sender.add_periodic_task(
-        crontab(hour=19, minute=30,), daily_reminder.s("Daily Ad Reminder")
+        crontab(hour=19, minute=55,), daily_reminder.s("Daily Ad Reminder")
     )
 
 if __name__ == "__main__":

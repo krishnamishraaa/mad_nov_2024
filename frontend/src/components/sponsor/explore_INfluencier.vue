@@ -4,12 +4,12 @@ import filtered_table from '/src/components/sponsor/influencer_Table.vue';
 import search_Filter from '/src/components/common/searchFilters.vue';
 
 
-const allinfluencers = ref([]); // Full influencer list
-const campaigns = ref([]); // Full campaign list
+const allinfluencers = ref([]); 
+const campaigns = ref([]);
 const filters = ref({
     category: '',
     niche: '',
-    reach: 50000, // Default minimum reach
+    reach: 50000, 
 });
 
 const updateFilters = (newFilters) => {
@@ -32,7 +32,7 @@ const filteredInfluencers = computed(() => {
     });
 });
 
-// Fetch influencers
+
 const fetchInfluencers = async () => {
     try {
         const response = await fetch('http://127.0.0.1:5000/api/influencer', {
@@ -52,7 +52,7 @@ const fetchInfluencers = async () => {
     }
 };
 
-// Fetch campaigns
+
 const fetchCampaigns = async () => {
     try {
         const response = await fetch('http://127.0.0.1:5000/api/campaign', {
@@ -70,7 +70,7 @@ const fetchCampaigns = async () => {
     }
 };
 
-// Fetch data on mount
+
 onMounted(async () => {
     await fetchInfluencers();
     await fetchCampaigns();
@@ -86,7 +86,7 @@ onMounted(async () => {
         </div>
         <div v-else>
 
-            <!-- Influencer Table Component -->
+            
             <influencer_Tables v-if=" allinfluencers && campaigns" :inflData="filteredInfluencers"
             :campData="campaigns" :filters="filters" />
             <search_Filter :filters="filters" @updateFilters="updateFilters" />

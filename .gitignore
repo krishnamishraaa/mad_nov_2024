@@ -1,3 +1,4 @@
 venvu/
 __pycache__/
+venv
 *.db

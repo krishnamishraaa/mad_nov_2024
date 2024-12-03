@@ -89,7 +89,7 @@ class CampaignApi(Resource):
 		if not token or user_role != "sponsor":
 			return {"message": "Unauthorized access"}, 403
 
-		# Define request parser for campaign input
+		
 		parser = reqparse.RequestParser()
 		parser.add_argument(
 			"name", type=str, required=True, help="Campaign name is required"
@@ -163,10 +163,10 @@ class CampaignApi(Resource):
 		if not campaign:
 			return {"message": "Campaign not found"}, 404
 
-		# Define request parser for campaign input
+		
 		args = request.get_json()
 		
-		# Only update provided fields
+		
 		if args["name"]:
 			campaign.name = args["name"]
 		if args["description"]:
@@ -240,7 +240,7 @@ class InfluencerApi(Resource):
 
 	@cache.cached(timeout=50)
 	def get(self):
-		# Retrieve influencer by their ID
+
 		influencer = Influencer.query.all()
 		return influencer, 200
 
@@ -257,7 +257,7 @@ class InfluencerApi(Resource):
 		parser.add_argument("website", type=str, required=False, help="Website is optional")
 		args = parser.parse_args()
 
-		# Creatign a new influencer with parsed data
+		
 		new_influencer = Influencer(
 			user_id=args["user_id"],
 			name=args["name"],
@@ -293,7 +293,7 @@ class InfluencerApi(Resource):
 		parser.add_argument("website", type=str, required=False, help="Website is optional")
 		args = parser.parse_args()
 
-		# Only update provided fields
+		
 		if args["name"]:
 			influencer.name = args["name"]
 		if args["category"]:
@@ -353,7 +353,7 @@ class SponsorApi(Resource):
 			return {"message": "Unauthorized access"}, 403
 
 		if action == "unapproved":
-			# Get all unapproved sponsors
+			
 			unapproved_sponsors = Sponsor.query.filter_by(approved=False).all()
 
 			if unapproved_sponsors:
@@ -364,12 +364,12 @@ class SponsorApi(Resource):
 			return {"message": "No unapproved sponsors found"}, 200
 
 		elif action == "count":
-			# Count total number of sponsors
+			
 			total_count = Sponsor.query.count()
 			return {"total_sponsors": total_count}, 200
 
 	def post(self):
-		# Define request parser for sponsor input
+		
 		parser = reqparse.RequestParser()
 		parser.add_argument(
 			"user_id", type=int, required=True, help="User ID is required"
@@ -401,7 +401,7 @@ class SponsorApi(Resource):
 
 		args = parser.parse_args()
 
-		# Create a new sponsor with parsed data
+		
 		new_sponsor = Sponsor(
 			user_id=args["user_id"],
 			name=args["name"],
@@ -410,7 +410,7 @@ class SponsorApi(Resource):
 			company_website=args["company_website"],
 		)
 
-		# Add the new sponsor to the database and commit
+		
 		try:
 			db.session.add(new_sponsor)
 			db.session.commit()
@@ -536,13 +536,13 @@ class AdRequestApi(Resource):
 	def post(self, camp_id, inf_id):
 		token, user_id, user_role = check_token_and_user()
 
-		# Parse JSON request body
+		
 		args = request.get_json()
 
 		if not args or "messages" not in args or "payment_amount" not in args:
 			return {"error": "Missing required fields"}, 400
 
-		# Create a new ad request
+		
 		new_ad_request = AdRequest(**args)
 		try:
 			db.session.add(new_ad_request)
@@ -691,7 +691,7 @@ class Stats(Resource):
 	def get(self):
 		token, user_id, user_role = check_token_and_user()
 
-		# Give counts related to the users influencer and sponsors
+		
 		users = User.query.count()
 		influencers = Influencer.query.count()
 		sponsors = Sponsor.query.count()
@@ -919,7 +919,7 @@ class UpdateCampaign(Resource):
 		if not new_influencer or not isinstance(new_influencer, dict):
 			return {"message": "Invalid or missing 'interested_influencers' data"}, 400
 		
-		# Deserialize current influencers or initialize as an empty list
+		
 		try:
 			current_influencers = json.loads(campaign.interested_influencers) if campaign.interested_influencers else []
 			
@@ -943,7 +943,7 @@ class UpdateCampaign(Resource):
 			return {"message": f"Error updating campaign: {str(e)}"}, 500
 
 class Campaign_Filter(Resource):
-	@cache.cached(timeout=30)
+	
 	def get(self):
 		category = request.args.get('category')
 		niche = request.args.get('niche')
@@ -962,7 +962,7 @@ class Campaign_Filter(Resource):
 			query = query.filter(Campaign.budget>=budget)
 			
 		if requirement:
-			query = query.filter(Campaign.requirements.ilike(f"%{requirement}%"))  # Assuming 'requirements' is a column
+			query = query.filter(Campaign.requirements.ilike(f"%{requirement}%"))
 		
 		campaigns = query.all()
 		
@@ -970,64 +970,64 @@ class Campaign_Filter(Resource):
 
 class ForGraphs(Resource):
 	def get(self):
-		# time series data for campaigns
+	
 		campaigns = Campaign.query.all()
 		campaigns = [campaign.to_dict() for campaign in campaigns]
 
-		# Convert 'start_date' to datetime and handle None values
+	
 		for campaign in campaigns:
 			campaign["start_date"] = convert_to_datetime(campaign.get("start_date"))
 
-		# Sort campaigns by start_date, treating None as datetime.min
+	
 		campaigns = sorted(campaigns, key=lambda x: x["start_date"] or datetime.min)
 		
 		campaigns_count_over_time = {}
 		for campaign in campaigns:
 			date = campaign["start_date"]
 			if date:
-				date_str = date.strftime("%Y-%m-%d")  # Format the date as string
+				date_str = date.strftime("%Y-%m-%d") 
 				if date_str in campaigns_count_over_time:
 					campaigns_count_over_time[date_str] += 1
 				else:
 					campaigns_count_over_time[date_str] = 1
 		
-		# time series data for ad requests
+		
 		ad_requests = AdRequest.query.all()
 		ad_requests = [ad_request.to_dict() for ad_request in ad_requests]
 
-		# Convert 'created_at' to datetime and handle None values
+	
 		for ad_request in ad_requests:
 			ad_request["created_at"] = ad_request.get("created_at")
 
-		# Sort ad_requests by created_at, treating None as datetime.min
+		
 		ad_requests = sorted(ad_requests, key=lambda x: x["created_at"] or datetime.min)
 		
 		ad_requests_count_over_time = {}
 		for ad_request in ad_requests:
 			date = ad_request["created_at"]
 			if date:
-				date_str = date.strftime("%Y-%m-%d")  # Format the date as string
+				date_str = date.strftime("%Y-%m-%d")  
 				if date_str in ad_requests_count_over_time:
 					ad_requests_count_over_time[date_str] += 1
 				else:
 					ad_requests_count_over_time[date_str] = 1
 
-		# time series data for user signups
+		
 		users = User.query.all()
 		users = [user.to_dict() for user in users]
 
-		# Convert 'create_datetime' to datetime and handle None values
+		
 		for user in users:
 			user["create_datetime"] = user.get("create_datetime")
 
-		# Sort users by create_datetime, treating None as datetime.min
+		
 		users = sorted(users, key=lambda x: x["create_datetime"] or datetime.min)
 		
 		users_count_over_time = {}
 		for user in users:
 			date = user["create_datetime"]
 			if date:
-				date_str = date.strftime("%Y-%m-%d")  # Format the date as string
+				date_str = date.strftime("%Y-%m-%d") 
 				if date_str in users_count_over_time:
 					users_count_over_time[date_str] += 1
 				else:

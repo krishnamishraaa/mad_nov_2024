@@ -33,13 +33,13 @@ const influencer = reactive({
 });
 
 var userId = ref(null);
-const loading = ref(false); // Track loading state
+const loading = ref(false); 
 
 // Function to create a user
 const createUser = async () => {
     console.log('Creating user:', user);
     if (user.email && user.role) {
-        loading.value = true; // Set loading to true during the request
+        loading.value = true; 
         try {
             const response = await fetch("http://127.0.0.1:5000/api/user", {
                 method: 'POST',
@@ -58,7 +58,7 @@ const createUser = async () => {
                 console.log('User created:', data);
 
                 if (data) {
-                    userId = data.userId; // Store the userId
+                    userId = data.userId; 
                     console.log('ye hai User ID:', userId);
                 } else {
                     alert('User creation failed');
@@ -71,7 +71,7 @@ const createUser = async () => {
         } catch (error) {
             console.error('Error:', error);
         } finally {
-            loading.value = false; // Set loading to false when done
+            loading.value = false; 
         }
     }
 };
@@ -83,7 +83,7 @@ const handleSubmit = async () => {
         return;
     }
 
-    await createUser(); // Create user first
+    await createUser(); // Created user first
 
     if (userId) {
         const formData = {
@@ -111,7 +111,7 @@ const handleSubmit = async () => {
             }
             const data = await response.json();
             alert('Influencer data saved successfully!');
-            // redirects to signin page
+
             window.location.href = '/signin';
         } catch (error) {
             console.error('Error:', error);

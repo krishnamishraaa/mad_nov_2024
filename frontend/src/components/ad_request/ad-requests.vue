@@ -9,7 +9,6 @@ const userDetails = JSON.parse(localStorage.getItem('userDetails'));
 const filter = ref('all')
 
 
-// Fetch ads from the backend
 const fetchAds = async () => {
     try {
         let params = new URLSearchParams({
@@ -24,7 +23,7 @@ const fetchAds = async () => {
             },
         });
 
-        // Check if the response is okay
+    
         if (!response.ok) {
             throw new Error(`Error: ${response.status}`);
         }
@@ -69,7 +68,7 @@ const negotiation = async (id, param) => {
         const amount = prompt("Enter the Amount you want to negotiate");
         if (amount === null || amount.trim() === "" || isNaN(amount) || parseFloat(amount) < 0) {
             alert("Please enter a valid amount.");
-            return; // Exit if no amount is provided
+            return; 
         }
 
         params = { param, amount: parseFloat(amount) }; 
@@ -109,7 +108,7 @@ const negotiation = async (id, param) => {
         
 
 
-// Fetch ads when the component is mounted
+
 onMounted(() => {
     fetchAds();
 });
@@ -130,7 +129,7 @@ watch(filter, fetchAds);
         </select>
    
         </div>
-        <!-- Display a message if no ads are available -->
+      
         <div v-if="ads.length === 0">
             <p>No ads to display</p>
         </div>
@@ -211,7 +210,7 @@ watch(filter, fetchAds);
 </template>
 
 <style scoped>
-/* Style the ads for a cleaner look */
+
 .ad-item {
     border: 1px solid #ddd;
     border-radius: 8px;

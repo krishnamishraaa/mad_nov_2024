@@ -21,10 +21,10 @@ import defaultAvatar from '/src/assets/avatar.png';
 
 const getAvatarUrl = (id) => {
     try {
-        // Dynamically import the user-specific avatar
+       
         return new URL(`/src/assets/images/in${id}.png`, import.meta.url).href;
     } catch {
-        // If the image is not found, use the default avatar
+       
         console.warn(`Avatar not found for ID ${id}. Using default avatar.`);
         return defaultAvatar;
     }
@@ -48,7 +48,6 @@ const getAvatarUrl = (id) => {
 
 <style>
 
-/* Position the container at the top-right corner */
 .top-right-container {
     position: fixed;
     top: 10px;
@@ -58,7 +57,7 @@ const getAvatarUrl = (id) => {
     gap: 10px;
     
     z-index: 1000;
-    /* Ensure it's on top of other elements */
+   
 }
 .top-left-container {
     position: fixed;
@@ -69,7 +68,7 @@ const getAvatarUrl = (id) => {
     gap: 10px;
 
     z-index: 1000;
-    /* Ensure it's on top of other elements */
+    
 }
 
 /* Style the avatar */

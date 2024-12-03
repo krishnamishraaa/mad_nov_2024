@@ -23,7 +23,7 @@ const socialLinks = ref({
 });
 const website = ref('');
 
-// Fetch influencer data when the component is mounted
+
 const fetchInfluencerData = async () => {
     try {
         console.log(user_id)
@@ -40,7 +40,7 @@ const fetchInfluencerData = async () => {
             const data = await response.json();
             // Populate the form fields with the fetched influencer data
             name.value = data.name || '';
-            password.value = ''; // Don't pre-populate password for security reasons
+            password.value = ''; 
             active.value = data.active || true;
             category.value = data.category || '';
             niche.value = data.niche || '';
@@ -62,12 +62,12 @@ const fetchInfluencerData = async () => {
     }
 };
 
-// Call the function to fetch influencer data when the component is mounted
+
 onMounted(() => {
     fetchInfluencerData();
 });
 
-// Function to handle form submission and update the profile
+
 const editProfile = async () => {
     const influencerData = {
         name: name.value,

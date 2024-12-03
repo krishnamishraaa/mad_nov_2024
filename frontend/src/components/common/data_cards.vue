@@ -1,7 +1,7 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue';
 
-// Props to accept dynamic data (expecting an object)
+
 const props = defineProps({
     stats: {
         type: Object,
@@ -10,10 +10,10 @@ const props = defineProps({
     },
 });
 
-// Emit updated stats back to parent component
+
 const emit = defineEmits(['updateStats']);
 
-// Directly use props.stats as it is already reactive
+
 const handleStatUpdate = (title, value) => {
     props.stats[title] = value; 
     emit('updateStats', props.stats);
@@ -22,18 +22,18 @@ const handleStatUpdate = (title, value) => {
 
 <template>
     <div class="stats-cards">
-        <!-- Loop through the stats dictionary and display each card dynamically -->
+       
         <div v-for="(value, title) in props.stats" :key="title" class="card" @click="handleStatUpdate(title, value)">
             <div class="card-title">{{ title.toUpperCase() }}</div>
 
-            <!-- Check if value is an array and display accordingly -->
+            
             <div class="card-value" v-if="Array.isArray(value)">
                 <div v-for="(val, index) in value" :key="index">
                     <p> {{ val.name }}:<small> {{ val.reach || val.budget || val.sponsor }}</small></p>
                 </div>
             </div>
 
-            <!-- Default display for non-array value -->
+           
             <div class="card-value" v-else>
                 {{ value }}
             </div>
@@ -49,7 +49,7 @@ const handleStatUpdate = (title, value) => {
     flex-wrap: wrap;
 }
 
-/* Style for individual cards */
+
 .card {
     background-color: #ffffff;
     border-radius: 10px;

@@ -74,7 +74,6 @@ defineProps({
 .table-container {
     margin: 20px;
     overflow-x: auto;
-    /* Ensures the table is scrollable on smaller screens */
 }
 
 table {

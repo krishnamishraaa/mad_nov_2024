@@ -13,8 +13,8 @@ const goals = ref('');
 const requirements = ref([]);
 const isChecked = ref(false);
 const campaigns = ref([]);
-const s_c = ref(null); // Store the selected campaign id
-const selectedCampaign = ref(null); // Store the campaign data when editing
+const s_c = ref(null); 
+const selectedCampaign = ref(null); 
 
 const handleCheckboxChange = () => {
     if (isChecked.value) {
@@ -249,7 +249,7 @@ const deleteCampaign = async (id) => {
 </template>
 
 <style scoped>
-/* General form layout */
+
 form {
     background-color: #f9f9f9;
     border: 1px solid #ddd;
@@ -260,7 +260,7 @@ form {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Row layout */
+
 .row {
     display: flex;
     flex-wrap: wrap;
@@ -268,7 +268,7 @@ form {
     margin-bottom: 15px;
 }
 
-/* Input fields */
+
 input.form-control,
 select.form-control {
     width: 100%;
@@ -286,7 +286,7 @@ select.form-control:focus {
     box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
 }
 
-/* Placeholder for select dropdown */
+
 select.form-control {
     background-color: white;
     appearance: none;
@@ -299,7 +299,7 @@ select.form-control {
     margin-left: 10px;
 }
 
-/* Button styling */
+
 button.btn {
     padding: 10px 20px;
     font-size: 16px;
@@ -318,7 +318,7 @@ button.btn-success:hover {
     background-color: #218838;
 }
 
-/* Headline */
+
 h2 {
     text-align: center;
     margin-bottom: 20px;

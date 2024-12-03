@@ -20,7 +20,7 @@
 </template>
 
 <script setup>
-// No specific script needed for this static content
+
 </script>
 
 <style scoped>

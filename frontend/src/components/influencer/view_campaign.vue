@@ -10,6 +10,15 @@ const filters = ref({
     budget: "",
     requirement: "",
 });
+const clearFilters = () => {
+    filters.value = {
+        category: "",
+        niche: "",
+        budget: "",
+        requirement: "",
+    };
+    fetchFilteredCampaigns();
+};
 
 const props = defineProps({
     campaign_id: { type: Number, required: false, default: null },
@@ -81,6 +90,7 @@ fetchFilteredCampaigns();
             <option value="short">Short</option>
             <option value="post">POST</option>
         </select>
+        <button @click="clearFilters" class="btn btn-secondary"> clear </button>
         <!-- <button @click="fetchFilteredCampaigns"><i class="bi bi-search"></i></button> -->
         <!-- <button ><i class="bi bi-search"></i></button> -->
     </div>

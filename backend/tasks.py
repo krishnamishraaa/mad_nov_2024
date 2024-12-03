@@ -44,7 +44,7 @@ def daily_reminder(subject):
 
     ad_requests = AdRequest.query.filter_by(status="Pending").all()
     pending_influencer = []
-#  ui = souvik. souvik_influencer_id, souvik.user_id
+
     for ads in ad_requests:
         pending_influencer.append(ads.influencer_id)
     

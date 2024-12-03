@@ -7,7 +7,11 @@ import { Chart as ChartJS, Title, Tooltip, Legend, LineElement, CategoryScale, L
 ChartJS.register(Title, Tooltip, Legend, LineElement, CategoryScale, LinearScale);
 
 // Declare reactive data for chart
-const chartData = ref({});
+// const chartData = ref({});
+const chartData = ref({
+  labels: [],
+  datasets: []
+});
 const chartOptions = ref({
   responsive: true,
   plugins: {
@@ -41,12 +45,16 @@ const props = defineProps({
   }
 });
 
-// Fetch data from the backend API
+
 const fetchData = async () => {
   try {
     const response = await fetch(props.apiEndpoint); 
     const data = await response.json();
-    const { campaigns, ad_requests, users } = data;
+    // const { campaigns, ad_requests, users } = data;
+
+    const campaigns = data.campaigns || {};
+    const ad_requests = data.ad_requests || {};
+    const users = data.users || {};
 
     // Collect all unique dates from all data sources
     const allDates = new Set([
@@ -57,7 +65,7 @@ const fetchData = async () => {
 
     // Prepare chart data
     chartData.value = {
-      labels: Array.from(allDates).sort(), // Ensure dates are sorted
+      labels: Array.from(allDates).sort(),
       datasets: [
         {
           label: "Campaigns",
@@ -87,7 +95,7 @@ const fetchData = async () => {
   }
 };
 
-// Fetch data when the component is mounted
+
 onMounted(() => {
   fetchData();
 });

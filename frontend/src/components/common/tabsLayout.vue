@@ -16,13 +16,13 @@ const props = defineProps({
     },
 });
 
-// Compute the default tab
+
 const defaultTab = computed(() => props.defaultTab || props.tabs[0]?.key);
 
-// Reactive active tab state
+
 const activeTab = ref(defaultTab.value);
 
-// Change tab and emit event
+
 const changeTab = (tab) => {
     activeTab.value = tab;
     emit('tab-change', tab);
@@ -85,7 +85,7 @@ const changeTab = (tab) => {
 
 .tab-container {
     flex-grow: 1;
-    /* Tabs take as much space as available */
+    
 }
 
 .tabs {
@@ -110,7 +110,7 @@ const changeTab = (tab) => {
 
 .right-box {
     flex-shrink: 0;
-    /* Prevent the box from shrinking */
+   
     margin-left: 0px;
     background-color: #fff;
     padding: 20px;
@@ -125,12 +125,12 @@ const changeTab = (tab) => {
 
 .left-panel {
     flex: 2;
-    /* Left panel takes 2/3 of space */
+    
 }
 
 .right-panel {
     flex: 1;
-    /* Right panel takes 1/3 of space */
+    
     overflow-y: auto;
 }
 </style>
